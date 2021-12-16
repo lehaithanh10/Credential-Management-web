@@ -1,0 +1,20 @@
+.form-edit {
+  justify-content: center;
+  display: flex;
+  .card-form-edit {
+    justify-content: center;
+    display: flex !important;
+    max-width: 50vw;
+  }
+}
+.author {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  img {
+    margin: 0;
+    margin-bottom: 5px;
+    height: 30vh;
+  }
+}
