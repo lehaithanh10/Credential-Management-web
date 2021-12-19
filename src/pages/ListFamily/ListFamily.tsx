@@ -1,34 +1,39 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Col, Container, Form, Modal, Row } from 'react-bootstrap';
+import { Button, Container, Form, Modal, Row } from 'react-bootstrap';
 import FamilyCard from '../../components/FamilyCard/FamilyCard';
 import './ListFamily.scss';
 import TitleCard from '../../components/Title/TitleCard';
 import { FamilyInfo } from '../../types/family';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setPageRendering } from '../../redux/pageRendering/PageRenderingAction';
 import { PageRender } from '../../types/page';
 import { useNavigate } from 'react-router-dom';
-import { setCurrentFamily } from '../../redux/family/FamilyAction';
+import {
+  setCurrentFamily,
+  setCurrentListFamily,
+} from '../../redux/family/FamilyAction';
 import ModalContent from '../../components/Modal/Modal';
 import { AiOutlinePlusCircle } from 'react-icons/ai';
-
-export enum ModalListFamilyState {
-  ADD_FAMILY = 'add-family',
-  CLOSE = 'close',
-}
+import { ModalListState } from '../../types/typeGlobal';
+import instance from '../../axiosInstance/axiosInstance';
+import { debounce } from 'lodash';
+import { PersonInfo } from '../../types/person';
+import { RootState } from '../../redux/reduxStore';
+import { renderErrorMessage } from '../../helpers';
 
 const ListFamily = () => {
-  const [listFamily, setListFamily] = useState<FamilyInfo[]>([]);
-  const [modalState, setModalState] = useState<ModalListFamilyState>(
-    ModalListFamilyState.CLOSE,
+  // const [listFamily, setListFamily] = useState<FamilyInfo[]>([]);
+  const listFamily: FamilyInfo[] = useSelector(
+    (state: RootState) => state.family.currentListFamily,
+  );
+  const [err, setErr] = useState<string[]>([]);
+  const [ownerSearched, setOwnerSearched] = useState<PersonInfo | null>();
+  const [modalState, setModalState] = useState<ModalListState>(
+    ModalListState.CLOSE,
   );
   const [formAddFamily, setFormAddFamily] = useState({
     address: '',
-    numberPeople: 1,
-    contact: '',
-    nameOwner: '',
-    id: '5',
-    ownerPersonalId: '',
+    ownerId: '',
   });
 
   const navigate = useNavigate();
@@ -40,89 +45,96 @@ const ListFamily = () => {
     return foundFamily[0];
   };
 
-  const handleShowAddFamilyMemberForm = () => {
-    setModalState(ModalListFamilyState.ADD_FAMILY);
+  const handleShowAddFamilyForm = () => {
+    setModalState(ModalListState.ADD_FAMILY);
   };
 
   const handleClose = () => {
-    setModalState(ModalListFamilyState.CLOSE);
+    setModalState(ModalListState.CLOSE);
   };
 
-  const handleChangeAddFamily = (event: any) => {
+  const handleChangeAddFamily = debounce((event: any) => {
     setFormAddFamily({
       ...formAddFamily,
       [event.target.name]: event.target.value,
     });
     console.log(formAddFamily);
-  };
+  }, 500);
 
   const handleClickFamilyCard = (familyId: string) => {
-    console.log(familyId);
-
     dispatch(setCurrentFamily(findFamily(listFamily, familyId)));
 
     navigate(`/familyDetail/${familyId}`);
   };
 
-  const submitAddFamily = (event: any) => {
+  const submitAddFamily = async (event: any) => {
     event.preventDefault();
 
     //call API to add member to db
 
-    setListFamily([...listFamily, formAddFamily]);
+    try {
+      const res = await instance.post('/hoKhau', formAddFamily);
 
-    handleClose();
+      // console.log(res);
+
+      if (!res.data.status) {
+        setErr([...err, res.data.response]);
+      } else {
+        dispatch(setCurrentListFamily([...listFamily, res.data.response]));
+        handleClose();
+      }
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const renderListFamily = (listFamily: FamilyInfo[]) => {
     return listFamily.map((family) => {
       return (
         <FamilyCard
-          key={family.id}
+          id={family.id}
           address={family.address}
-          numberPeople={family.numberPeople}
+          soTVien={family.soTVien}
           contact={family.contact}
-          nameOwner={family.nameOwner}
+          owner={family.owner}
           onClick={() => handleClickFamilyCard(family.id)}
         />
       );
     });
   };
 
+  const fetchFamily = async () => {
+    try {
+      const res = await instance.get(`/hoKhau`);
+      dispatch(setCurrentListFamily(res.data.response));
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const handleGetOwnerByCCCD = async (event: any) => {
+    try {
+      const ownerCCCD = event.target.value;
+      const res = await instance.get(
+        `/congDan/search?cccd=${ownerCCCD}&sortD=1&sortBy=firstName&page=1`,
+      );
+      setOwnerSearched(res.data.response[0]);
+      setFormAddFamily({
+        ...formAddFamily,
+        ownerId: res.data.response[0].id,
+      });
+      console.log(res.data.response[0].id);
+    } catch (err) {
+      setOwnerSearched(null);
+      console.log(err);
+    }
+  };
+
   useEffect(() => {
     //call api here to get list family
     dispatch(setPageRendering(PageRender.LIST_FAMILY));
 
-    setListFamily([
-      {
-        address: '39 Dich Vong Cau Giay',
-        numberPeople: 4,
-        contact: '0981497748',
-        nameOwner: 'Le Hai THanh',
-        id: '1',
-      },
-      {
-        address: '37 Dich Vong Cau Giay',
-        numberPeople: 4,
-        contact: '0981497748',
-        nameOwner: 'Le Hai Long',
-        id: '2',
-      },
-      {
-        address: '35 Dich Vong Cau Giay',
-        numberPeople: 4,
-        contact: '0981497748',
-        nameOwner: 'Le Hai Dang',
-        id: '3',
-      },
-      {
-        address: '33 Dich Vong Cau Giay',
-        numberPeople: 4,
-        contact: '0981497748',
-        nameOwner: 'Le Hai Tien',
-        id: '4',
-      },
-    ]);
+    fetchFamily();
   }, []);
 
   return (
@@ -131,16 +143,21 @@ const ListFamily = () => {
         <AiOutlinePlusCircle
           style={{ margin: '5vh 2vw', cursor: 'pointer' }}
           size={42}
-          onClick={handleShowAddFamilyMemberForm}
+          onClick={handleShowAddFamilyForm}
         />
         <Modal
-          show={modalState === ModalListFamilyState.ADD_FAMILY}
+          show={modalState === ModalListState.ADD_FAMILY}
           onHide={handleClose}
           backdrop="static"
           keyboard={false}
         >
-          <ModalContent title="Thêm hộ gia đình viên" handleClose={handleClose}>
+          <ModalContent title="Thêm hộ gia đình" handleClose={handleClose}>
             <Form className="add-member-form" onSubmit={submitAddFamily}>
+              {!!err.length && (
+                <div className="alert alert-danger" role="alert">
+                  {renderErrorMessage(err)}
+                </div>
+              )}
               <Form.Group className="mb-3">
                 <Form.Label>Địa chỉ</Form.Label>
                 <Form.Control
@@ -153,7 +170,11 @@ const ListFamily = () => {
               <Form.Group className="mb-3">
                 <Form.Label>Tên chủ hộ</Form.Label>
                 <Form.Control
-                  placeholder="Tên chủ hộ"
+                  placeholder={
+                    !!ownerSearched
+                      ? `${ownerSearched?.firstName} ${ownerSearched?.lastName} `
+                      : 'Tên chủ hộ'
+                  }
                   onChange={handleChangeAddFamily}
                   name="nameOwner"
                 />
@@ -164,16 +185,8 @@ const ListFamily = () => {
                 <Form.Control
                   placeholder="Số căn cước công dân chủ hộ"
                   onChange={handleChangeAddFamily}
+                  onBlur={handleGetOwnerByCCCD}
                   name="ownerPersonalId"
-                />
-              </Form.Group>
-
-              <Form.Group className="mb-3">
-                <Form.Label>Liên hệ</Form.Label>
-                <Form.Control
-                  placeholder="Số điện thoại chủ hộ"
-                  onChange={handleChangeAddFamily}
-                  name="contact"
                 />
               </Form.Group>
 

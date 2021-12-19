@@ -1,7 +1,10 @@
+import { PersonInfo } from './person';
+
 export interface FamilyInfo {
   id: string;
   address: string;
-  numberPeople: number;
+  soTVien: number;
   contact: string;
-  nameOwner: string;
+  owner: string;
+  members: PersonInfo[];
 }

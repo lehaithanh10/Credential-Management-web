@@ -9,18 +9,18 @@ import {
 import './FamilyCard.scss';
 
 interface FamilyCardProps {
-  key: string;
+  id: string;
   address: string;
-  nameOwner: string;
-  numberPeople: number;
+  owner: string;
+  soTVien: number;
   contact: string;
   onClick: (event: any) => void;
 }
 
 const FamilyCard = (props: FamilyCardProps) => {
   return (
-    <div className="card" onClick={props.onClick} key={props.key}>
-      <div className="card-header" >
+    <div className="card" onClick={props.onClick} key={props.id}>
+      <div className="card-header">
         <div>
           <div className="card-title-group">
             <div className="card-title">
@@ -29,12 +29,12 @@ const FamilyCard = (props: FamilyCardProps) => {
             </div>
             <div className="card-title">
               <BsFillPersonFill />
-              <div className="card-content">Tên chủ hộ : {props.nameOwner}</div>
+              <div className="card-content">Tên chủ hộ : {props.owner}</div>
             </div>
             <div className="card-title">
               <BsFillPeopleFill />
               <div className="card-content">
-                Số lượng thành viên : {props.numberPeople}
+                Số lượng thành viên : {props.soTVien}
               </div>
             </div>
             <div className="card-title">

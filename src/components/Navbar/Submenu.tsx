@@ -23,6 +23,22 @@ const SidebarLink = styled(Link)`
   }
 `;
 
+const SidebarItemWithSub = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 3.75rem;
+  font-size: 1.125rem;
+  padding: 2rem;
+  text-decoration: none;
+  color: #ffffff;
+
+  &:hover {
+    background-color: #1f1f1b;
+    border-left: 4px solid #6d44dc;
+  }
+`;
+
 const SidebarLabel = styled.span`
   margin-left: 1rem;
 `;
@@ -48,15 +64,28 @@ const Submenu: FC<SidebarLinkProps> = ({ item }) => {
 
   return (
     <>
-      <SidebarLink to={item.path} onClick={showSubnav}>
-        <div>
-          {item.icon}
-          <SidebarLabel>{item.title}</SidebarLabel>
-        </div>
-        <div>
-          {item?.subnav && subnav ? item?.iconOpened : item?.iconClosed}
-        </div>
-      </SidebarLink>
+      {item.subnav && (
+        <SidebarItemWithSub onClick={showSubnav}>
+          <div>
+            {item.icon}
+            <SidebarLabel>{item.title}</SidebarLabel>
+          </div>
+          <div>
+            {item?.subnav && subnav ? item?.iconOpened : item?.iconClosed}
+          </div>
+        </SidebarItemWithSub>
+      )}
+      {!item.subnav && (
+        <SidebarLink to={item.path}>
+          <div>
+            {item.icon}
+            <SidebarLabel>{item.title}</SidebarLabel>
+          </div>
+          <div>
+            {item?.subnav && subnav ? item?.iconOpened : item?.iconClosed}
+          </div>
+        </SidebarLink>
+      )}
       {subnav &&
         item?.subnav?.map((subnavItem, index) => {
           return (

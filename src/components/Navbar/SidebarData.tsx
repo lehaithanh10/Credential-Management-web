@@ -6,37 +6,43 @@ import {
   AiOutlineMoneyCollect,
   AiOutlineUser,
 } from 'react-icons/ai';
+import { HiDocumentRemove, HiOutlineDocumentAdd } from 'react-icons/hi';
 import { RiMoneyDollarBoxFill } from 'react-icons/ri';
 import { SidebarItem } from '../../models/SidebarItem';
 
 export const SidebarData: SidebarItem[] = [
   {
     title: 'Quản lý hộ gia đình',
-    path: '/family',
+    path: '',
     icon: <AiOutlineHome />,
-    // iconClosed: <AiFillCaretDown />,
-    // iconOpened: <AiFillCaretUp />,
-    // subnav: [
-    //   {
-    //     title: 'Users',
-    //     path: '/overview/users',
-    //     icon: <AiOutlineUser />,
-    //   },
-    //   {
-    //     title: 'Revenue',
-    //     path: '/overview/revenue',
-    //     icon: <AiOutlineMoneyCollect />,
-    //   },
-    // ],
-  },
-  {
-    title: 'Quản lý quỹ',
-    path: '/funding',
-    icon: <RiMoneyDollarBoxFill />,
+    iconClosed: <AiFillCaretDown />,
+    iconOpened: <AiFillCaretUp />,
+    subnav: [
+      {
+        title: 'Danh sách hộ gia đình',
+        path: '/family',
+        icon: <AiOutlineHome />,
+      },
+      {
+        title: 'Đăng ký tạm trú',
+        path: '/overview/revenue',
+        icon: <HiOutlineDocumentAdd />,
+      },
+      {
+        title: 'Đăng ký tạm vắng',
+        path: '/overview/revenue',
+        icon: <HiDocumentRemove />,
+      },
+    ],
   },
   {
     title: 'Quản lý nhân khẩu',
     path: '/people',
     icon: <AiOutlineUser />,
+  },
+  {
+    title: 'Quản lý quỹ',
+    path: '/funding',
+    icon: <RiMoneyDollarBoxFill />,
   },
 ];

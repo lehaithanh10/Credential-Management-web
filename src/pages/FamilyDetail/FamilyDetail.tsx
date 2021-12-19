@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Modal, Button, Form, Row, Col } from 'react-bootstrap';
-import { AiOutlinePlusCircle } from 'react-icons/ai';
+import { Container, Modal, Button, Form } from 'react-bootstrap';
 import {
   BsFillHouseFill,
   BsFillPeopleFill,
@@ -9,62 +8,28 @@ import {
 } from 'react-icons/bs';
 import { FaPencilAlt } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate, useParams } from 'react-router-dom';
+import instance from '../../axiosInstance/axiosInstance';
 import ModalContent from '../../components/Modal/Modal';
 import PersonCard from '../../components/PersonCard/PersonCard';
 import TitleCard from '../../components/Title/TitleCard';
 import { setCurrentFamily } from '../../redux/family/FamilyAction';
 import { RootState } from '../../redux/reduxStore';
 import { PersonInfo } from '../../types/person';
+import { ModalListState } from '../../types/typeGlobal';
 import './FamilyDetail.scss';
-
-export enum ModalFamilyDetailState {
-  ADD_FAMILY_MEMBER = 'add-family-member',
-  EDIT_FAMILY_INFO = 'edit-family-info',
-  CLOSE = 'close',
-}
 
 const FamilyDetail = () => {
   const dispatch = useDispatch();
   const currentFamily = useSelector(
     (state: RootState) => state.family.currentFamily,
   );
-  const [listPeople, setlistPeople] = useState<PersonInfo[]>([]);
-  const [formAddMember, setFormAddMember] = useState({
-    name: '',
-    image: '',
-    phoneNumber: '',
-    relation: '',
-    job: '',
-    status: 'Đang sống',
-  });
+  const [listPeople, setListPeople] = useState<PersonInfo[]>([]);
   const [formEditFamily, setEditFamily] = useState({
     address: '',
     contact: '',
     nameOwner: '',
   });
-
-  const handleChangeAddMember = (event: any) => {
-    setFormAddMember({
-      ...formAddMember,
-      [event.target.name]: event.target.value,
-    });
-    console.log(formAddMember);
-  };
-
-  const submitAddMember = (event: any) => {
-    event.preventDefault();
-
-    //call API to add member to db
-
-    setlistPeople([...listPeople, formAddMember]);
-    dispatch(
-      setCurrentFamily({
-        ...currentFamily,
-        numberPeople: currentFamily.numberPeople + 1,
-      }),
-    );
-    handleClose();
-  };
 
   const handleChangeEditFamily = (event: any) => {
     setEditFamily({
@@ -87,75 +52,91 @@ const FamilyDetail = () => {
     );
     handleClose();
   };
+  const navigate = useNavigate();
 
-  const [modalState, setModalState] = useState<ModalFamilyDetailState>(
-    ModalFamilyDetailState.CLOSE,
-  );
-
-  const handleShowAddFamilyMemberForm = () => {
-    setModalState(ModalFamilyDetailState.ADD_FAMILY_MEMBER);
-  };
-
-  const handleShowEditFamilyForm = () => {
-    setModalState(ModalFamilyDetailState.EDIT_FAMILY_INFO);
-  };
-
-  const handleClose = () => {
-    setModalState(ModalFamilyDetailState.CLOSE);
+  const handleClickPersonCard = (canCuocCongDan: string) => {
+    console.log(canCuocCongDan);
+    navigate(`/personDetail/${canCuocCongDan}`);
   };
 
   const renderListPeople = (listPeople: PersonInfo[]) => {
     return listPeople.map((person) => {
       return (
         <PersonCard
-          name={person.name}
+          name={`${person.firstName} ${person.lastName}`}
           image={person.image}
           phoneNumber={person.phoneNumber}
-          relation={person.relation}
+          relationship={person.relationship}
           job={person.job}
           status={person.status}
+          onClick={() => {
+            handleClickPersonCard(person.canCuocCongDan);
+          }}
         />
       );
     });
   };
 
+  const [modalState, setModalState] = useState<ModalListState>(
+    ModalListState.CLOSE,
+  );
+
+  const handleShowEditFamilyForm = () => {
+    setModalState(ModalListState.EDIT_FAMILY_INFO);
+  };
+
+  const handleClose = () => {
+    setModalState(ModalListState.CLOSE);
+  };
+  let slug = useParams();
+
+  const fetchListFamilyMember = async () => {
+    const res = await instance.get(`/hoKhau/${slug.id}`);
+    setListPeople(res.data.response.members);
+    dispatch(setCurrentFamily(res.data.response));
+  };
+
   useEffect(() => {
     //call api to get list people
-
-    setlistPeople([
-      {
-        name: 'Le Hai Thanh',
-        image: '',
-        phoneNumber: '0981497748',
-        relation: 'Onwer',
-        job: 'Developer',
-        status: 'Live',
-      },
-      {
-        name: 'Le Thuy Tien',
-        image: '',
-        phoneNumber: '0365756209',
-        relation: 'Sister',
-        job: 'Student',
-        status: 'Live',
-      },
-      {
-        name: 'Ho Anh Thu',
-        image: '',
-        phoneNumber: '0983310515',
-        relation: 'Mother',
-        job: 'Accounting',
-        status: 'Live',
-      },
-      {
-        name: 'Le Thuy Tien',
-        image: '',
-        phoneNumber: '0365756209',
-        relation: 'Sister',
-        job: 'Student',
-        status: 'Live',
-      },
-    ]);
+    // setListPeople([
+    //   {
+    //     name: 'Le Hai Thanh',
+    //     image: '',
+    //     phoneNumber: '0981497748',
+    //     relation: 'Onwer',
+    //     job: 'Developer',
+    //     status: 'Live',
+    //     canCuocCongDan: '001100110011',
+    //   },
+    //   {
+    //     name: 'Le Thuy Tien',
+    //     image: '',
+    //     phoneNumber: '0365756209',
+    //     relation: 'Sister',
+    //     job: 'Student',
+    //     status: 'Live',
+    //     canCuocCongDan: '001100110011',
+    //   },
+    //   {
+    //     name: 'Ho Anh Thu',
+    //     image: '',
+    //     phoneNumber: '0983310515',
+    //     relation: 'Mother',
+    //     job: 'Accounting',
+    //     status: 'Live',
+    //     canCuocCongDan: '001100110011',
+    //   },
+    //   {
+    //     name: 'Le Thuy Tien',
+    //     image: '',
+    //     phoneNumber: '0365756209',
+    //     relation: 'Sister',
+    //     job: 'Student',
+    //     status: 'Live',
+    //     canCuocCongDan: '001100110011',
+    //   },
+    // ]);
+    fetchListFamilyMember();
   }, []);
 
   return (
@@ -167,7 +148,7 @@ const FamilyDetail = () => {
           onClick={handleShowEditFamilyForm}
         />
         <Modal
-          show={modalState === ModalFamilyDetailState.EDIT_FAMILY_INFO}
+          show={modalState === ModalListState.EDIT_FAMILY_INFO}
           onHide={handleClose}
           backdrop="static"
           keyboard={false}
@@ -228,13 +209,13 @@ const FamilyDetail = () => {
           <div className="card-title">
             <BsFillPersonFill />
             <div className="card-content">
-              Tên chủ hộ : {currentFamily.nameOwner}
+              Tên chủ hộ : {currentFamily.owner}
             </div>
           </div>
           <div className="card-title">
             <BsFillPeopleFill />
             <div className="card-content">
-              Số lượng thành viên : {currentFamily.numberPeople}
+              Số lượng thành viên : {currentFamily.soTVien}
             </div>
           </div>
           <div className="card-title">
