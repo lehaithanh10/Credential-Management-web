@@ -42,6 +42,7 @@ interface Search {
 
 const Sidebar: FC = () => {
   const [sidebar, setSidebar] = useState<boolean>(false);
+  console.log(sidebar);
   const [displayAdvanceSearch, setDisplayAdvanceSearch] =
     useState<boolean>(false);
   const [formSearch, setFormSearch] = useState<Search>({
