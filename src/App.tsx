@@ -8,6 +8,7 @@ import PersonDetail from './pages/PersonDetail/PersonDetail';
 import ListPeople from './pages/ListPeople/ListPeople';
 import ListEventFunding from './pages/ListEventFunding/ListEventFunding';
 import EventDetail from './pages/EventDetail/EventDetail';
+import FormTamtru from './components/TamTru/Tamtru';
 
 const App: FC = () => {
   return (
@@ -20,7 +21,9 @@ const App: FC = () => {
         {/* <Route path="/person" element={<PersonCard />}></Route> */}
         <Route path="/familyDetail/:id" element={<FamilyDetail />}></Route>
         <Route path="/personDetail/:id" element={<PersonDetail />}></Route>
-        <Route path="/fundingDetail/:id" element={<EventDetail />}></Route>
+        {/* <Route path="/fundingDetail/:id" element={<EventDetail />}></Route> */}
+        <Route path="/tamtru" element={<FormTamtru />}></Route>
+
         {/* <Route path="/overview/users" component={Users} exact></Route>
         <Route path="/overview/revenue" component={Revenue} exact></Route>
         <Route path="/order" component={Order} exact></Route>
