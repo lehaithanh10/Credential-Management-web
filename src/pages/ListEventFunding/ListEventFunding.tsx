@@ -5,7 +5,9 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import EventFundingCard from '../../components/EventFundingCard/EventFundingCard';
 import FormAddEvent from '../../components/Form/FormAddEvent';
+import AddEventModal from '../../components/Modal/AddEventModal';
 import ModalContent from '../../components/Modal/Modal';
+import CustomPagination from '../../components/Pagination/Pagination';
 import TitleCard from '../../components/Title/TitleCard';
 import { setPageRendering } from '../../redux/pageRendering/PageRenderingAction';
 import { EventFundingInfo } from '../../types/eventFunding';
@@ -30,7 +32,15 @@ const ListEventFunding = () => {
     id: '',
     totalAmount: 0,
     description: '',
+    listFamily: [],
   });
+
+  const [page, setPage] = useState<number>(1);
+  const [total, setTotal] = useState<number>(7);
+
+  const onChangePage = (page: number) => {
+    setPage(page);
+  };
 
   const handleChangeAddEvent = (event: any) => {
     setAddEvent({
@@ -61,20 +71,44 @@ const ListEventFunding = () => {
         time: '15/10/2021',
         description: 'string',
         id: '1',
+        listFamily: [
+          {
+            address: '39 Dich Vong Cau Giay',
+            owner: 'Le Hai Thanh',
+            amount: 1,
+            time: '15/10/2021',
+          },
+        ],
       },
       {
         name: 'Đóng góp hội khuyến học',
         totalAmount: 20000000,
         time: '15/10/2021',
         description: 'string',
-        id: '1',
+        id: '2',
+        listFamily: [
+          {
+            address: '39 Dich Vong Cau Giay',
+            owner: 'Le Hai Thanh',
+            amount: 1,
+            time: '15/10/2021',
+          },
+        ],
       },
       {
         name: 'Ủng hộ hội chữ thập đỏ',
         totalAmount: 100000,
         time: '15/10/2021',
         description: 'string',
-        id: '1',
+        id: '3',
+        listFamily: [
+          {
+            address: '39 Dich Vong Cau Giay',
+            owner: 'Le Hai Thanh',
+            amount: 1,
+            time: '15/10/2021',
+          },
+        ],
       },
     ]);
   }, []);
@@ -113,7 +147,14 @@ const ListEventFunding = () => {
           size={42}
           onClick={handleShowAddEventForm}
         />
-        <Modal
+        <AddEventModal
+          title="Thêm quỹ"
+          showModal={modalState === ModalListState.ADD_EVENT}
+          handleChangeAddEvent={handleChangeAddEvent}
+          handleClose={handleClose}
+          submitAddEvent={submitAddEvent}
+        ></AddEventModal>
+        {/* <Modal
           show={modalState === ModalListState.ADD_EVENT}
           onHide={handleClose}
           backdrop="static"
@@ -125,10 +166,19 @@ const ListEventFunding = () => {
               submitAddEvent={submitAddEvent}
             ></FormAddEvent>
           </ModalContent>
-        </Modal>
+        </Modal> */}
       </TitleCard>
       <div className="list-family-container">
         {renderListEventFunding(listEventFunding)}
+      </div>
+
+      <div className="d-flex justify-content-center mt-2">
+        <CustomPagination
+          current={page}
+          pageSize={6}
+          total={total}
+          onChangePage={onChangePage}
+        ></CustomPagination>
       </div>
     </Container>
   );

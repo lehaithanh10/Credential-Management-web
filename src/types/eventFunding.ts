@@ -4,11 +4,12 @@ export interface EventFundingInfo {
   totalAmount: number;
   time: string;
   description: string;
-  listFamily?: FamilyFundingInfo[];
+  listFamily: FamilyFundingInfo[];
 }
 
 export interface FamilyFundingInfo {
   address: string;
-  nameOnwer: string;
+  owner: string;
   amount: number;
+  time: string;
 }

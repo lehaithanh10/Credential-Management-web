@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Container, Form, Modal, Row } from 'react-bootstrap';
+import { Button, Container, Form, Modal } from 'react-bootstrap';
 import FamilyCard from '../../components/FamilyCard/FamilyCard';
 import './ListFamily.scss';
 import TitleCard from '../../components/Title/TitleCard';
@@ -20,11 +20,15 @@ import { debounce } from 'lodash';
 import { PersonInfo } from '../../types/person';
 import { RootState } from '../../redux/reduxStore';
 import { renderErrorMessage } from '../../helpers';
+import CustomPagination from '../../components/Pagination/Pagination';
+import { setCurrentErrorSearch } from '../../redux/errorSearch/ErrorSearchAction';
 
 const ListFamily = () => {
-  // const [listFamily, setListFamily] = useState<FamilyInfo[]>([]);
   const listFamily: FamilyInfo[] = useSelector(
     (state: RootState) => state.family.currentListFamily,
+  );
+  const errSearch: string[] = useSelector(
+    (state: RootState) => state.errorSearch.currentErrorSearch,
   );
   const [err, setErr] = useState<string[]>([]);
   const [ownerSearched, setOwnerSearched] = useState<PersonInfo | null>();
@@ -35,6 +39,11 @@ const ListFamily = () => {
     address: '',
     ownerId: '',
   });
+  const [page, setPage] = useState<number>(1);
+  const [total, setTotal] = useState<number>(7);
+  const onChangePage = (page: number) => {
+    setPage(page);
+  };
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -103,15 +112,6 @@ const ListFamily = () => {
     });
   };
 
-  const fetchFamily = async () => {
-    try {
-      const res = await instance.get(`/hoKhau`);
-      dispatch(setCurrentListFamily(res.data.response));
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
   const handleGetOwnerByCCCD = async (event: any) => {
     try {
       const ownerCCCD = event.target.value;
@@ -130,12 +130,26 @@ const ListFamily = () => {
     }
   };
 
+  const fetchFamily = async () => {
+    try {
+      const res = await instance.get(`/hoKhau?page=${page}&pageSize=6`);
+      if (res.data.status) {
+        dispatch(setCurrentListFamily(res.data.response));
+        setTotal(res.data.totalItems);
+      } else {
+        dispatch(setCurrentErrorSearch([res.data.response]));
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   useEffect(() => {
     //call api here to get list family
     dispatch(setPageRendering(PageRender.LIST_FAMILY));
 
     fetchFamily();
-  }, []);
+  }, [page]);
 
   return (
     <Container>
@@ -153,11 +167,7 @@ const ListFamily = () => {
         >
           <ModalContent title="Thêm hộ gia đình" handleClose={handleClose}>
             <Form className="add-member-form" onSubmit={submitAddFamily}>
-              {!!err.length && (
-                <div className="alert alert-danger" role="alert">
-                  {renderErrorMessage(err)}
-                </div>
-              )}
+              {!!err.length && renderErrorMessage(err)}
               <Form.Group className="mb-3">
                 <Form.Label>Địa chỉ</Form.Label>
                 <Form.Control
@@ -204,7 +214,18 @@ const ListFamily = () => {
         </Modal>
       </TitleCard>
       <div className="list-family-container">
-        {renderListFamily(listFamily)}
+        {!errSearch.length && renderListFamily(listFamily)}
+        {!!errSearch.length && renderErrorMessage(errSearch)}
+      </div>
+      <div className="d-flex justify-content-center mt-2">
+        {!errSearch.length && (
+          <CustomPagination
+            current={page}
+            pageSize={6}
+            total={total}
+            onChangePage={onChangePage}
+          ></CustomPagination>
+        )}
       </div>
     </Container>
   );
