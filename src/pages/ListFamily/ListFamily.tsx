@@ -16,7 +16,7 @@ import ModalContent from '../../components/Modal/Modal';
 import { AiOutlinePlusCircle } from 'react-icons/ai';
 import { ModalListState } from '../../types/typeGlobal';
 import instance from '../../axiosInstance/axiosInstance';
-import { debounce } from 'lodash';
+//import { debounce } from 'lodash';
 import { PersonInfo } from '../../types/person';
 import { RootState } from '../../redux/reduxStore';
 import { renderErrorMessage } from '../../helpers';
@@ -53,13 +53,13 @@ const ListFamily = () => {
     setModalState(ModalListState.CLOSE);
   };
 
-  const handleChangeAddFamily = debounce((event: any) => {
-    setFormAddFamily({
-      ...formAddFamily,
-      [event.target.name]: event.target.value,
-    });
-    console.log(formAddFamily);
-  }, 500);
+  // const handleChangeAddFamily = debounce((event: any) => {
+  //   setFormAddFamily({
+  //     ...formAddFamily,
+  //     [event.target.name]: event.target.value,
+  //   });
+  //   console.log(formAddFamily);
+  // }, 500);
 
   const handleClickFamilyCard = (familyId: string) => {
     dispatch(setCurrentFamily(findFamily(listFamily, familyId)));
@@ -162,7 +162,7 @@ const ListFamily = () => {
                 <Form.Label>Địa chỉ</Form.Label>
                 <Form.Control
                   placeholder="Địa chỉ"
-                  onChange={handleChangeAddFamily}
+                  //onChange={handleChangeAddFamily}
                   name="address"
                 />
               </Form.Group>
@@ -175,7 +175,7 @@ const ListFamily = () => {
                       ? `${ownerSearched?.firstName} ${ownerSearched?.lastName} `
                       : 'Tên chủ hộ'
                   }
-                  onChange={handleChangeAddFamily}
+                  //onChange={handleChangeAddFamily}
                   name="nameOwner"
                 />
               </Form.Group>
@@ -184,7 +184,7 @@ const ListFamily = () => {
                 <Form.Label>Số căn cước công dân chủ hộ</Form.Label>
                 <Form.Control
                   placeholder="Số căn cước công dân chủ hộ"
-                  onChange={handleChangeAddFamily}
+                  //onChange={handleChangeAddFamily}
                   onBlur={handleGetOwnerByCCCD}
                   name="ownerPersonalId"
                 />
