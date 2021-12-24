@@ -7,7 +7,7 @@ instance.interceptors.request.use(
   function (config) {
     const token = `Bearer ${tokenJWT}`;
     if (token) {
-      config.headers.Authorization = token;
+      //config.headers.Authorization = token;
     }
     console.log('config', config);
     return config;
