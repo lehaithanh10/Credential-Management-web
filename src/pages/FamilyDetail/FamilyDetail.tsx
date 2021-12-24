@@ -1,5 +1,6 @@
+import { debounce } from 'lodash';
 import React, { useEffect, useState } from 'react';
-import { Container, Modal, Button, Form } from 'react-bootstrap';
+import { Container, Modal, Button, Form, Row, Col } from 'react-bootstrap';
 import {
   BsFillHouseFill,
   BsFillPeopleFill,
@@ -13,37 +14,56 @@ import instance from '../../axiosInstance/axiosInstance';
 import ModalContent from '../../components/Modal/Modal';
 import PersonCard from '../../components/PersonCard/PersonCard';
 import TitleCard from '../../components/Title/TitleCard';
+import { renderErrorMessage } from '../../helpers';
 import { setCurrentFamily } from '../../redux/family/FamilyAction';
 import { RootState } from '../../redux/reduxStore';
 import { PersonInfo } from '../../types/person';
 import { ModalListState } from '../../types/typeGlobal';
 import './FamilyDetail.scss';
 
+interface formEditFamily {
+  address: string;
+  contact: string;
+  nameOwner: string;
+  ownerCccd: string;
+  ownerId?: number;
+}
 const FamilyDetail = () => {
   const dispatch = useDispatch();
   const currentFamily = useSelector(
     (state: RootState) => state.family.currentFamily,
   );
   const [listPeople, setListPeople] = useState<PersonInfo[]>([]);
-  const [formEditFamily, setEditFamily] = useState({
-    address: '',
-    contact: '',
-    nameOwner: '',
+  const [errSearch, setErrSearch] = useState<string[]>();
+  const [formEditFamily, setFormEditFamily] = useState<formEditFamily>({
+    address: currentFamily.address,
+    contact: currentFamily.contact,
+    nameOwner: currentFamily.owner,
+    ownerCccd: '',
+    ownerId: currentFamily.members.find(
+      (member) => member.relationship === 'Chủ hộ',
+    )?.id,
   });
 
   const handleChangeEditFamily = (event: any) => {
-    setEditFamily({
+    setFormEditFamily({
       ...formEditFamily,
       [event.target.name]: event.target.value,
     });
     console.log(formEditFamily);
   };
 
-  const submitEditFamily = (event: any) => {
+  const submitEditFamily = async (event: any) => {
     event.preventDefault();
 
-    //call API to edit in db
+    const res = await instance.put('/hoKhau', {
+      id: currentFamily.id,
+      address: formEditFamily.address,
+      ownerId: formEditFamily.ownerId,
+      membersId: currentFamily.members.map((member) => member.id),
+    });
 
+    console.log(res.data);
     dispatch(
       setCurrentFamily({
         ...currentFamily,
@@ -96,46 +116,39 @@ const FamilyDetail = () => {
     dispatch(setCurrentFamily(res.data.response));
   };
 
+  const debounceFetchByCccd = debounce((event: any) => {
+    const ownerCCCD = event.target.value;
+
+    handleSearchOwnerByCCCD(ownerCCCD);
+  }, 1000);
+
+  const handleSearchOwnerByCCCD = async (ownerCccd: string) => {
+    const res = await instance.get(
+      `/congDan/search?cccd=${ownerCccd}&sortD=1&sortBy=firstName&page=1`,
+    );
+    if (res.status) {
+      const contact = res.data.response[0].phoneNumber;
+      const nameOwner = `${res.data.response[0].firstName} ${res.data.response[0].lastName}`;
+      if (contact !== formEditFamily.contact) {
+        setFormEditFamily((formEditFamily) => ({ ...formEditFamily, contact }));
+      }
+      if (nameOwner !== formEditFamily.nameOwner) {
+        setFormEditFamily((formEditFamily) => ({
+          ...formEditFamily,
+          nameOwner,
+        }));
+      }
+      setFormEditFamily((formEditFamily) => ({
+        ...formEditFamily,
+        ownerCccd,
+        ownerId: res.data.response[0].id,
+      }));
+    } else {
+      setErrSearch([res.data.response]);
+    }
+  };
+
   useEffect(() => {
-    //call api to get list people
-    // setListPeople([
-    //   {
-    //     name: 'Le Hai Thanh',
-    //     image: '',
-    //     phoneNumber: '0981497748',
-    //     relation: 'Onwer',
-    //     job: 'Developer',
-    //     status: 'Live',
-    //     canCuocCongDan: '001100110011',
-    //   },
-    //   {
-    //     name: 'Le Thuy Tien',
-    //     image: '',
-    //     phoneNumber: '0365756209',
-    //     relation: 'Sister',
-    //     job: 'Student',
-    //     status: 'Live',
-    //     canCuocCongDan: '001100110011',
-    //   },
-    //   {
-    //     name: 'Ho Anh Thu',
-    //     image: '',
-    //     phoneNumber: '0983310515',
-    //     relation: 'Mother',
-    //     job: 'Accounting',
-    //     status: 'Live',
-    //     canCuocCongDan: '001100110011',
-    //   },
-    //   {
-    //     name: 'Le Thuy Tien',
-    //     image: '',
-    //     phoneNumber: '0365756209',
-    //     relation: 'Sister',
-    //     job: 'Student',
-    //     status: 'Live',
-    //     canCuocCongDan: '001100110011',
-    //   },
-    // ]);
     fetchListFamilyMember();
   }, []);
 
@@ -157,6 +170,7 @@ const FamilyDetail = () => {
             title="Chỉnh sửa thông tin hộ gia đình"
             handleClose={handleClose}
           >
+            {errSearch && renderErrorMessage(errSearch)}
             <Form className="edit-family-form" onSubmit={submitEditFamily}>
               <Form.Group className="mb-3">
                 <Form.Label>Địa chỉ</Form.Label>
@@ -166,24 +180,47 @@ const FamilyDetail = () => {
                   placeholder="Địa chỉ"
                 />
               </Form.Group>
+              <Row className="mb-3">
+                <Form.Group as={Col}>
+                  <Form.Label>Tên chủ hộ mới</Form.Label>
+                  <Form.Control
+                    onChange={handleChangeEditFamily}
+                    name="nameOwner"
+                    placeholder={
+                      formEditFamily.nameOwner
+                        ? formEditFamily.nameOwner
+                        : 'Tên'
+                    }
+                  />
+                </Form.Group>
+                <Form.Group as={Col}>
+                  <Form.Label>Căn cước công dân chủ hộ mới</Form.Label>
+                  <Form.Control
+                    onChange={debounceFetchByCccd}
+                    name="ownerCccd"
+                    placeholder={
+                      formEditFamily.ownerCccd
+                        ? formEditFamily.ownerCccd
+                        : 'Căn cước công dân'
+                    }
+                  />
+                </Form.Group>
+              </Row>
 
               <Form.Group className="mb-3">
-                <Form.Label>Tên chủ hộ</Form.Label>
+                <Form.Label>Liên hệ (số điện thoại chủ hộ mới)</Form.Label>
                 <Form.Control
-                  onChange={handleChangeEditFamily}
-                  name="nameOwner"
-                  placeholder="Tên chủ hộ"
-                />
-              </Form.Group>
-
-              <Form.Group className="mb-3">
-                <Form.Label>Liên hệ</Form.Label>
-                <Form.Control
-                  placeholder="Liên hệ"
+                  placeholder={
+                    formEditFamily.contact ? formEditFamily.contact : 'Liên hệ'
+                  }
                   name="contact"
                   onChange={handleChangeEditFamily}
                 />
               </Form.Group>
+              <p style={{ fontStyle: 'italic', fontSize: 12 }}>
+                *Nhập căn cước công dân để thực hiện tìm kiếm thông tin nhanh
+                hơn
+              </p>
 
               <div className="button-add">
                 <Button

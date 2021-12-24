@@ -13,6 +13,7 @@ import { RootState } from '../../redux/reduxStore';
 import { PageRender } from '../../types/page';
 import instance from '../../axiosInstance/axiosInstance';
 import { setCurrentListFamily } from '../../redux/family/FamilyAction';
+import { setCurrentErrorSearch } from '../../redux/errorSearch/ErrorSearchAction';
 
 const SidebarNav = styled.div<{ sidebar: boolean }>`
   width: 300px;
@@ -103,7 +104,13 @@ const Sidebar: FC = () => {
             `hoKhau/search?cccd=${formSearch.cccd}`,
           );
           console.log(res.data);
-          dispatch(setCurrentListFamily(res.data.response));
+          if (res.data.status) {
+            dispatch(setCurrentListFamily(res.data.response));
+          } else {
+            dispatch(setCurrentErrorSearch([res.data.response]));
+
+            dispatch(setCurrentListFamily([]));
+          }
         }
         break;
 
@@ -143,7 +150,6 @@ const Sidebar: FC = () => {
                   variant="success"
                   onClick={(e) => {
                     setDisplayAdvanceSearch(true);
-                    // handleChange(e, [5000000, 20000000]);
                   }}
                 >
                   Advanced Search

@@ -11,6 +11,7 @@ import { PageRender } from '../../types/page';
 import { PersonInfo } from '../../types/person';
 import { ModalListState } from '../../types/typeGlobal';
 import instance from '../../axiosInstance/axiosInstance';
+import CustomPagination from '../../components/Pagination/Pagination';
 
 const ListPeople = () => {
   const [listPeople, setListPeople] = useState<PersonInfo[]>([]);
@@ -32,6 +33,12 @@ const ListPeople = () => {
     specialNotes: '',
     departmentTime: null,
   });
+  const [page, setPage] = useState<number>(1);
+  const [total, setTotal] = useState<number>(6);
+
+  const onChangePage = (page: number) => {
+    setPage(page);
+  };
   const dispatch = useDispatch();
 
   const handleShowAddPersonForm = () => {
@@ -85,9 +92,10 @@ const ListPeople = () => {
 
   const fetchPeople = async () => {
     try {
-      const res = await instance.get(`/congDan`);
+      const res = await instance.get(`/congDan/?page=1&pageSize=4`);
       console.log(res.data);
       setListPeople(res.data.response);
+      setTotal(res.data.totalItems);
     } catch (err) {
       console.log(err);
     }
@@ -99,7 +107,7 @@ const ListPeople = () => {
     dispatch(setPageRendering(PageRender.LIST_CREDENTIAL));
 
     fetchPeople();
-  }, []);
+  }, [page]);
 
   return (
     <Container>
@@ -227,6 +235,14 @@ const ListPeople = () => {
         </Modal>
       </TitleCard>
       <div className="person-container">{renderListPeople(listPeople)}</div>
+      <div className="d-flex justify-content-center mt-2">
+        <CustomPagination
+          current={page}
+          pageSize={6}
+          total={total}
+          onChangePage={onChangePage}
+        ></CustomPagination>
+      </div>
     </Container>
   );
 };

@@ -5,6 +5,9 @@ import {
   BsFillPeopleFill,
   BsFillPersonFill,
 } from 'react-icons/bs';
+import { FaMoneyBillWave } from 'react-icons/fa';
+import { GrMoney } from 'react-icons/gr';
+import { RiTimerFill } from 'react-icons/ri';
 
 import './EventFundingCard.scss';
 
@@ -24,15 +27,15 @@ const EventFundingCard = (props: EventFundingCardProps) => {
         <div>
           <div className="card-title-group">
             <div className="card-title">
-              <BsFillHouseFill />
+              <GrMoney />
               <div className="card-content">Tên quỹ : {props.name}</div>
             </div>
             <div className="card-title">
-              <BsFillPeopleFill />
+              <RiTimerFill />
               <div className="card-content">Thời gian thu : {props.time}</div>
             </div>
             <div className="card-title">
-              <BsFillPersonFill />
+              <FaMoneyBillWave />
               <div className="card-content">
                 Tổng số tiền : {props.totalAmount}
               </div>
