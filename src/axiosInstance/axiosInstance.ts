@@ -1,16 +1,18 @@
 import axios from 'axios';
 const tokenJWT =
-  'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoYWl0aGFuaCIsImlhdCI6MTY0MDI3MTA1MywiZXhwIjoxNjQwMzU3NDUzfQ.R7VAo7dCBBThq5spU3pR1iZl68jhqZnKmGeTjmJLtYsnTT3Oh-ZsZxgisHac7dzOaSX3L7DA6hruYErsQYu2eQ';
+  'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoYWl0aGFuaCIsImlhdCI6MTY0MDY0ODQ0MCwiZXhwIjoxNjQwNzM0ODQwfQ.NXO4wAFkZLrxPJgXkpcD1_diqcr9AbEK089vPQExRRlmZ2S_a5lVdyCDhZwncicNElfxGIjVBwwQYVeDuT0hFg';
 const instance = axios.create({
   baseURL: 'http://localhost:8080/api',
 });
 instance.interceptors.request.use(
   function (config) {
+    console.log()
     const token = `Bearer ${tokenJWT}`;
     if (token) {
-      //config.headers.Authorization = token;
+      config.headers = {
+        Authorization: token,
+      };
     }
-    console.log('config', config);
     return config;
   },
   function (error) {

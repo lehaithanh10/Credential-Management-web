@@ -4,4 +4,5 @@ export enum ModalListState {
   ADD_EVENT = 'add-event',
   UPDATE_EVENT = 'update-event',
   CLOSE = 'close',
+  ADD_PERSON = 'add-person',
 }

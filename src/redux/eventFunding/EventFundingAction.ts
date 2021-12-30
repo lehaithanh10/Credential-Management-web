@@ -11,13 +11,13 @@ export interface EventFundingGeneralAction<T> {
 }
 
 export const setCurrentEventFunding = (
-  EventFunding: EventFundingInfo,
+  eventFunding: EventFundingInfo,
 ): EventFundingGeneralAction<EventFundingInfo> => {
-  return { type: EventFundingAction.EDIT_CURRENT_EVENT_FUNDING, payload: EventFunding };
+  return { type: EventFundingAction.EDIT_CURRENT_EVENT_FUNDING, payload: eventFunding };
 };
 
-// export const setCurrentListEventFunding = (
-//   families: EventFundingInfo[],
-// ): EventFundingGeneralAction<EventFundingInfo[]> => {
-//   return { type: EventFundingAction.EDIT_CURRENT_LIST_EventFunding, payload: families };
-// };
+export const setCurrentListEventFunding = (
+  eventFundings: EventFundingInfo[],
+): EventFundingGeneralAction<EventFundingInfo[]> => {
+  return { type: EventFundingAction.EDIT_CURRENT_LIST_EVENT_FUNDING, payload: eventFundings };
+};

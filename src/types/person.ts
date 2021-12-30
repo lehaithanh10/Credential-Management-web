@@ -4,15 +4,16 @@ export interface PersonInfo {
   phoneNumber: string;
   relationship: string;
   job: string;
-  status: string;
+  status: PersonStatus;
   canCuocCongDan: string;
   address: string;
   dateOfBirth: string;
   firstName: string;
   gender: string;
-  idSHK?: string;
+  idSHKSoHuu?: string;
   lastName: string;
   specialNotes?: string;
+  departmentTime?: string;
 }
 
 export enum PersonStatus {

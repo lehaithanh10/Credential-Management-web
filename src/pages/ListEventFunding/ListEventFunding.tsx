@@ -1,22 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Modal } from 'react-bootstrap';
+import { Container } from 'react-bootstrap';
 import { AiOutlinePlusCircle } from 'react-icons/ai';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import instance from '../../axiosInstance/axiosInstance';
 import EventFundingCard from '../../components/EventFundingCard/EventFundingCard';
-import FormAddEvent from '../../components/Form/FormAddEvent';
-import AddEventModal from '../../components/Modal/AddEventModal';
-import ModalContent from '../../components/Modal/Modal';
+import ModalAddEvent from '../../components/Modal/AddEventModal';
+import Sidebar from '../../components/Navbar/Sidebar';
 import CustomPagination from '../../components/Pagination/Pagination';
 import TitleCard from '../../components/Title/TitleCard';
+import { renderErrorMessage } from '../../helpers';
+import { setCurrentListEventFunding } from '../../redux/eventFunding/EventFundingAction';
 import { setPageRendering } from '../../redux/pageRendering/PageRenderingAction';
+import { setTotal } from '../../redux/pagination/PaginationAction';
+import { RootState } from '../../redux/reduxStore';
 import { EventFundingInfo } from '../../types/eventFunding';
 import { PageRender } from '../../types/page';
 import { ModalListState } from '../../types/typeGlobal';
 
 const ListEventFunding = () => {
-  const [listEventFunding, setListEventFunding] = useState<EventFundingInfo[]>(
-    [],
+  const listEventFunding: EventFundingInfo[] = useSelector(
+    (state: RootState) => state.eventFunding.currentListEventFunding,
   );
   const [modalState, setModalState] = useState<ModalListState>(
     ModalListState.CLOSE,
@@ -27,16 +31,22 @@ const ListEventFunding = () => {
     setModalState(ModalListState.CLOSE);
   };
   const [formAddEvent, setAddEvent] = useState({
-    name: '',
-    time: '',
-    id: '',
-    totalAmount: 0,
-    description: '',
-    listFamily: [],
+    eventName: '',
+    date: '',
+    tongtien: 0,
+    descriptions: '',
+    mucphi: 0,
+    listHKDG: [],
   });
 
+  const errSearch: string[] = useSelector(
+    (state: RootState) => state.errorSearch.currentErrorSearch,
+  );
+
   const [page, setPage] = useState<number>(1);
-  const [total, setTotal] = useState<number>(7);
+  const total: number = useSelector(
+    (state: RootState) => state.pagination.total,
+  );
 
   const onChangePage = (page: number) => {
     setPage(page);
@@ -50,68 +60,35 @@ const ListEventFunding = () => {
     console.log(formAddEvent);
   };
 
-  const submitAddEvent = (event: any) => {
+  const submitAddEvent = async (event: any) => {
     event.preventDefault();
 
-    //call API to add member to db
+    try {
+      const res = await instance.post(`/dongGop/`, formAddEvent);
 
-    setListEventFunding([...listEventFunding, formAddEvent]);
+      if (res.data.status) {
+        window.location.reload();
+      }
+    } catch (err) {
+      alert(err);
+    }
 
     handleClose();
   };
 
+  const fetchListEventFunding = async () => {
+    const res = await instance.get(`/dongGop/?page=${page}&pageSize=6`);
+    if (res.status) {
+      dispatch(setCurrentListEventFunding(res.data.response));
+      dispatch(setTotal(res.data.totalItems));
+    }
+  };
+
   useEffect(() => {
-    //call api here to get list family
     dispatch(setPageRendering(PageRender.LIST_EVENT));
 
-    setListEventFunding([
-      {
-        name: 'Thu phí sinh hoạt tổ dân phố',
-        totalAmount: 100000000,
-        time: '15/10/2021',
-        description: 'string',
-        id: '1',
-        listFamily: [
-          {
-            address: '39 Dich Vong Cau Giay',
-            owner: 'Le Hai Thanh',
-            amount: 1,
-            time: '15/10/2021',
-          },
-        ],
-      },
-      {
-        name: 'Đóng góp hội khuyến học',
-        totalAmount: 20000000,
-        time: '15/10/2021',
-        description: 'string',
-        id: '2',
-        listFamily: [
-          {
-            address: '39 Dich Vong Cau Giay',
-            owner: 'Le Hai Thanh',
-            amount: 1,
-            time: '15/10/2021',
-          },
-        ],
-      },
-      {
-        name: 'Ủng hộ hội chữ thập đỏ',
-        totalAmount: 100000,
-        time: '15/10/2021',
-        description: 'string',
-        id: '3',
-        listFamily: [
-          {
-            address: '39 Dich Vong Cau Giay',
-            owner: 'Le Hai Thanh',
-            amount: 1,
-            time: '15/10/2021',
-          },
-        ],
-      },
-    ]);
-  }, []);
+    fetchListEventFunding();
+  }, [page]);
 
   const navigate = useNavigate();
 
@@ -120,10 +97,11 @@ const ListEventFunding = () => {
       return (
         <EventFundingCard
           key={eventFunding.id}
-          name={eventFunding.name}
-          totalAmount={eventFunding.totalAmount}
-          time={eventFunding.time}
-          description={eventFunding.description}
+          eventName={eventFunding.eventName}
+          tongtien={eventFunding.tongtien}
+          date={eventFunding.date}
+          descriptions={eventFunding.descriptions}
+          mucphi={eventFunding.mucphi}
           onClick={() => {
             handleClickEventFundingCard(eventFunding.id);
           }}
@@ -132,7 +110,7 @@ const ListEventFunding = () => {
     });
   };
 
-  const handleClickEventFundingCard = (eventId: string) => {
+  const handleClickEventFundingCard = (eventId: number) => {
     navigate(`/fundingDetail/${eventId}`);
   };
 
@@ -140,47 +118,40 @@ const ListEventFunding = () => {
     setModalState(ModalListState.ADD_EVENT);
   };
   return (
-    <Container>
-      <TitleCard title="Danh sách các quỹ đóng góp">
-        <AiOutlinePlusCircle
-          style={{ margin: '5vh 2vw', cursor: 'pointer' }}
-          size={42}
-          onClick={handleShowAddEventForm}
-        />
-        <AddEventModal
-          title="Thêm quỹ"
-          showModal={modalState === ModalListState.ADD_EVENT}
-          handleChangeAddEvent={handleChangeAddEvent}
-          handleClose={handleClose}
-          submitAddEvent={submitAddEvent}
-        ></AddEventModal>
-        {/* <Modal
-          show={modalState === ModalListState.ADD_EVENT}
-          onHide={handleClose}
-          backdrop="static"
-          keyboard={false}
-        >
-          <ModalContent title="Thêm quỹ" handleClose={handleClose}>
-            <FormAddEvent
-              handleChangeAddEvent={handleChangeAddEvent}
-              submitAddEvent={submitAddEvent}
-            ></FormAddEvent>
-          </ModalContent>
-        </Modal> */}
-      </TitleCard>
-      <div className="list-family-container">
-        {renderListEventFunding(listEventFunding)}
-      </div>
+    <>
+      <Sidebar />
+      <Container>
+        <TitleCard title="Danh sách các quỹ đóng góp">
+          <AiOutlinePlusCircle
+            style={{ margin: '5vh 2vw', cursor: 'pointer' }}
+            size={42}
+            onClick={handleShowAddEventForm}
+          />
+          <ModalAddEvent
+            title="Thêm quỹ"
+            showModal={modalState === ModalListState.ADD_EVENT}
+            handleChangeAddEvent={handleChangeAddEvent}
+            handleClose={handleClose}
+            submitAddEvent={submitAddEvent}
+          ></ModalAddEvent>
+        </TitleCard>
+        <div className="list-family-container">
+          {!errSearch.length && renderListEventFunding(listEventFunding)}
+          {!!errSearch.length && renderErrorMessage(errSearch)}
+        </div>
 
-      <div className="d-flex justify-content-center mt-2">
-        <CustomPagination
-          current={page}
-          pageSize={6}
-          total={total}
-          onChangePage={onChangePage}
-        ></CustomPagination>
-      </div>
-    </Container>
+        <div className="d-flex justify-content-center mt-2">
+          {!errSearch.length && (
+            <CustomPagination
+              current={page}
+              pageSize={6}
+              total={total}
+              onChangePage={onChangePage}
+            ></CustomPagination>
+          )}
+        </div>
+      </Container>
+    </>
   );
 };
 

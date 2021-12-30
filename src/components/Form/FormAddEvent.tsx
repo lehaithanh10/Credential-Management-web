@@ -15,16 +15,37 @@ const FormAddEvent = (props: FormAddEventProps) => {
             <Form.Label>Tên quỹ</Form.Label>
             <Form.Control
               placeholder="Tên"
-              name="name"
+              name="eventName"
               onChange={props.handleChangeAddEvent}
             />
           </Form.Group>
 
           <Form.Group className="mb-3">
+            <Form.Label>Mức phí</Form.Label>
+            <Form.Control
+              placeholder="Mức phí (VNĐ)"
+              name="mucphi"
+              onChange={props.handleChangeAddEvent}
+            />
+          </Form.Group>
+
+          <Form.Group controlId="formGrid">
             <Form.Label>Thời gian thu</Form.Label>
             <Form.Control
-              placeholder="Thời gian thu"
-              name="time"
+              type="date"
+              name="date"
+              placeholder="Chọn ngày bắt đầu"
+              // max={today}
+              onChange={props.handleChangeAddEvent}
+            />
+          </Form.Group>
+
+          <Form.Group className="mb-3">
+            <Form.Label>Mô tả</Form.Label>
+            <Form.Control
+              as="textarea"
+              placeholder="Mô tả"
+              name="descriptions"
               onChange={props.handleChangeAddEvent}
             />
           </Form.Group>

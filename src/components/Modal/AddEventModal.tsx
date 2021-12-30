@@ -5,12 +5,12 @@ interface EventModalProps {
   title: string;
   children?: any;
   showModal: boolean;
-  handleClose: (event: any) => void;
+  handleClose: () => void;
   handleChangeAddEvent: (event: any) => void;
   submitAddEvent: (event: any) => void;
 }
 
-const AddEventModal = (props: EventModalProps) => {
+const ModalAddEvent = (props: EventModalProps) => {
   return (
     <div>
       <Modal
@@ -33,4 +33,4 @@ const AddEventModal = (props: EventModalProps) => {
   );
 };
 
-export default AddEventModal;
+export default ModalAddEvent;

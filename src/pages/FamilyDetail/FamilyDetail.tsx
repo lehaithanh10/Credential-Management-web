@@ -1,6 +1,7 @@
 import { debounce } from 'lodash';
 import React, { useEffect, useState } from 'react';
 import { Container, Modal, Button, Form, Row, Col } from 'react-bootstrap';
+import { AiOutlinePlusCircle } from 'react-icons/ai';
 import {
   BsFillHouseFill,
   BsFillPeopleFill,
@@ -11,15 +12,17 @@ import { FaPencilAlt } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import instance from '../../axiosInstance/axiosInstance';
+import ModalAddPeople from '../../components/Modal/AddPeopleModal';
 import ModalContent from '../../components/Modal/Modal';
-import PersonCard from '../../components/PersonCard/PersonCard';
 import TitleCard from '../../components/Title/TitleCard';
 import { renderErrorMessage } from '../../helpers';
 import { setCurrentFamily } from '../../redux/family/FamilyAction';
 import { RootState } from '../../redux/reduxStore';
-import { PersonInfo } from '../../types/person';
+import { IFormAddPeople } from '../../types/form';
+import { PersonInfo, PersonStatus } from '../../types/person';
 import { ModalListState } from '../../types/typeGlobal';
 import './FamilyDetail.scss';
+import PersonCardFamilyMember from '../../components/FamilyMemberCard/FamilyMemberCard';
 
 interface formEditFamily {
   address: string;
@@ -27,62 +30,159 @@ interface formEditFamily {
   nameOwner: string;
   ownerCccd: string;
   ownerId?: number;
+  members: PersonInfo[];
 }
+
+export const renderSearchPeople = (
+  listPeople: [],
+  handleChoosePerson: (event: any, person: any) => void,
+) => {
+  return listPeople.map((person: any) => {
+    return (
+      <>
+        <div
+          onClick={(e) => handleChoosePerson(e, person)}
+          className="alert alert-success"
+          style={{ width: '100%', cursor: 'pointer' }}
+          role="alert"
+          id={person.id}
+        >
+          Họ và tên : {person.firstName} {person.lastName} <br />
+          Số căn cước công dân : {person.canCuocCongDan}
+        </div>
+      </>
+    );
+  });
+};
 const FamilyDetail = () => {
   const dispatch = useDispatch();
+  let slug = useParams();
+
   const currentFamily = useSelector(
     (state: RootState) => state.family.currentFamily,
   );
   const [listPeople, setListPeople] = useState<PersonInfo[]>([]);
-  const [errSearch, setErrSearch] = useState<string[]>();
+  const [searchedPeopleError, setSearchedPeopleError] = useState<string[]>();
+  const [searchedPeople, setSearchedPeople] = useState<[]>();
   const [formEditFamily, setFormEditFamily] = useState<formEditFamily>({
-    address: currentFamily.address,
-    contact: currentFamily.contact,
-    nameOwner: currentFamily.owner,
+    address: '',
+    contact: '',
+    nameOwner: '',
     ownerCccd: '',
-    ownerId: currentFamily.members.find(
-      (member) => member.relationship === 'Chủ hộ',
-    )?.id,
+    ownerId: 0,
+    members: [],
   });
 
-  const handleChangeEditFamily = (event: any) => {
-    setFormEditFamily({
+  const [formAddPeople, setFormAddPeople] = useState<IFormAddPeople>({
+    image:
+      'https://vnn-imgs-a1.vgcloud.vn/image1.ictnews.vn/_Files/2020/03/17/trend-avatar-1.jpg',
+    phoneNumber: '',
+    relationship: '',
+    job: '',
+    status: PersonStatus.LIVE,
+    canCuocCongDan: '',
+    firstName: '',
+    lastName: '',
+    address: '',
+    dateOfBirth: '',
+    gender: '',
+    specialNotes: '',
+    owner: '',
+    idSHK: slug.id as string,
+  });
+
+  const handleChoosePerson = (event: any, people: any) => {
+    const contact = people.phoneNumber;
+    const nameOwner = `${people.firstName} ${people.lastName}`;
+    if (contact !== formEditFamily.contact) {
+      setFormEditFamily((formEditFamily) => ({
+        ...formEditFamily,
+        contact,
+      }));
+    }
+    if (nameOwner !== formEditFamily.nameOwner) {
+      setFormEditFamily((formEditFamily) => ({
+        ...formEditFamily,
+        nameOwner,
+      }));
+    }
+    setFormEditFamily((formEditFamily) => ({
       ...formEditFamily,
-      [event.target.name]: event.target.value,
-    });
-    console.log(formEditFamily);
+      ownerId: event.target.id,
+    }));
+    setSearchedPeople([]);
   };
+
+  const handleChangeEditFamily = debounce(async (event: any) => {
+    if (event.target.name === 'relationship') {
+      if (event.target.value === 'Chủ hộ') {
+        console.log(event.target.id);
+        setFormEditFamily((formEditFamily) => ({
+          ...formEditFamily,
+          ownerId: Number(event.target.id),
+        }));
+      }
+      const newMembersWithRelationship = formEditFamily.members.map(
+        (member) => {
+          if (member.id === Number(event.target.id)) {
+            return {
+              ...member,
+              relationship: event.target.value,
+            };
+          }
+          return member;
+        },
+      );
+      setFormEditFamily((formEditFamily) => ({
+        ...formEditFamily,
+        members: newMembersWithRelationship,
+      }));
+    }
+    if (event.target.name === 'ownerCccd') {
+      const ownerCccd = event.target.value;
+      const res = await instance.get(
+        `/congDan/search?cccd=${ownerCccd}&sortD=1&sortBy=firstName&page=1`,
+      );
+      console.log(res.data);
+      if (res.data.status) {
+        setSearchedPeople(res.data.response);
+      } else {
+        setSearchedPeopleError([res.data.response]);
+      }
+    }
+    if (event.target.name === 'address') {
+      setFormEditFamily({
+        ...formEditFamily,
+        [event.target.name]: event.target.value,
+      });
+    }
+  }, 1000);
 
   const submitEditFamily = async (event: any) => {
     event.preventDefault();
+    console.log(formEditFamily);
 
     const res = await instance.put('/hoKhau', {
+      ...formEditFamily,
       id: currentFamily.id,
-      address: formEditFamily.address,
-      ownerId: formEditFamily.ownerId,
-      membersId: currentFamily.members.map((member) => member.id),
     });
 
     console.log(res.data);
-    dispatch(
-      setCurrentFamily({
-        ...currentFamily,
-        ...formEditFamily,
-      }),
-    );
-    handleClose();
+    if (res.data.status) {
+      window.location.reload();
+    }
   };
   const navigate = useNavigate();
 
-  const handleClickPersonCard = (canCuocCongDan: string) => {
-    console.log(canCuocCongDan);
-    navigate(`/personDetail/${canCuocCongDan}`);
+  const handleClickPersonCard = (id: number) => {
+    navigate(`/personDetail/${id}`);
   };
 
   const renderListPeople = (listPeople: PersonInfo[]) => {
     return listPeople.map((person) => {
       return (
-        <PersonCard
+        <PersonCardFamilyMember
+          id={person.id}
           name={`${person.firstName} ${person.lastName}`}
           image={person.image}
           phoneNumber={person.phoneNumber}
@@ -90,8 +190,9 @@ const FamilyDetail = () => {
           job={person.job}
           status={person.status}
           onClick={() => {
-            handleClickPersonCard(person.canCuocCongDan);
+            handleClickPersonCard(person.id);
           }}
+          handleChangeRelationship={handleChangeEditFamily}
         />
       );
     });
@@ -108,44 +209,55 @@ const FamilyDetail = () => {
   const handleClose = () => {
     setModalState(ModalListState.CLOSE);
   };
-  let slug = useParams();
 
   const fetchListFamilyMember = async () => {
     const res = await instance.get(`/hoKhau/${slug.id}`);
+    const memberWithIdAndRelationship = res.data.response.members.map(
+      (member: any) => {
+        if (member.relationship === 'Chủ hộ') {
+          setFormEditFamily((formEditFamily) => ({
+            ...formEditFamily,
+            ownerId: member.id,
+          }));
+        }
+        return {
+          id: member.id,
+          relationship: member.relationship,
+        };
+      },
+    );
     setListPeople(res.data.response.members);
+    setFormEditFamily((formEditFamily) => ({
+      ...formEditFamily,
+      members: memberWithIdAndRelationship,
+    }));
     dispatch(setCurrentFamily(res.data.response));
   };
 
-  const debounceFetchByCccd = debounce((event: any) => {
-    const ownerCCCD = event.target.value;
+  const handleShowAddPersonForm = () => {
+    setModalState(ModalListState.ADD_PERSON);
+  };
 
-    handleSearchOwnerByCCCD(ownerCCCD);
-  }, 1000);
+  const handleChangeAddPeople = (event: any) => {
+    setFormAddPeople({
+      ...formAddPeople,
+      [event.target.name]: event.target.value,
+    });
+  };
 
-  const handleSearchOwnerByCCCD = async (ownerCccd: string) => {
-    const res = await instance.get(
-      `/congDan/search?cccd=${ownerCccd}&sortD=1&sortBy=firstName&page=1`,
-    );
-    if (res.status) {
-      const contact = res.data.response[0].phoneNumber;
-      const nameOwner = `${res.data.response[0].firstName} ${res.data.response[0].lastName}`;
-      if (contact !== formEditFamily.contact) {
-        setFormEditFamily((formEditFamily) => ({ ...formEditFamily, contact }));
-      }
-      if (nameOwner !== formEditFamily.nameOwner) {
-        setFormEditFamily((formEditFamily) => ({
-          ...formEditFamily,
-          nameOwner,
-        }));
-      }
-      setFormEditFamily((formEditFamily) => ({
-        ...formEditFamily,
-        ownerCccd,
-        ownerId: res.data.response[0].id,
-      }));
-    } else {
-      setErrSearch([res.data.response]);
+  const [searchedOwner, setSearchedOwner] = useState<[]>();
+  const [searchedOwnerError, setSearchedOwnerError] = useState<string[]>();
+
+  const submitAddPeople = async (event: any) => {
+    event.preventDefault();
+
+    const res = await instance.post('/congDan', formAddPeople);
+
+    if (res.data.status) {
+      window.location.reload();
     }
+
+    handleClose();
   };
 
   useEffect(() => {
@@ -170,8 +282,8 @@ const FamilyDetail = () => {
             title="Chỉnh sửa thông tin hộ gia đình"
             handleClose={handleClose}
           >
-            {errSearch && renderErrorMessage(errSearch)}
-            <Form className="edit-family-form" onSubmit={submitEditFamily}>
+            {searchedPeopleError && renderErrorMessage(searchedPeopleError)}
+            <Form className="edit-family-form">
               <Form.Group className="mb-3">
                 <Form.Label>Địa chỉ</Form.Label>
                 <Form.Control
@@ -196,7 +308,7 @@ const FamilyDetail = () => {
                 <Form.Group as={Col}>
                   <Form.Label>Căn cước công dân chủ hộ mới</Form.Label>
                   <Form.Control
-                    onChange={debounceFetchByCccd}
+                    onChange={handleChangeEditFamily}
                     name="ownerCccd"
                     placeholder={
                       formEditFamily.ownerCccd
@@ -206,6 +318,8 @@ const FamilyDetail = () => {
                   />
                 </Form.Group>
               </Row>
+              {searchedPeople &&
+                renderSearchPeople(searchedPeople, handleChoosePerson)}
 
               <Form.Group className="mb-3">
                 <Form.Label>Liên hệ (số điện thoại chủ hộ mới)</Form.Label>
@@ -221,14 +335,20 @@ const FamilyDetail = () => {
                 *Nhập căn cước công dân để thực hiện tìm kiếm thông tin nhanh
                 hơn
               </p>
+              <p style={{ fontStyle: 'italic', fontSize: 12 }}>
+                *Nếu thay đổi chủ hộ hãy sửa quan hệ của các thành viên khác
+              </p>
 
               <div className="button-add">
                 <Button
+                  onClick={() => {
+                    handleClose();
+                  }}
                   style={{ width: '20%' }}
                   variant="primary"
-                  type="submit"
+                  type="button"
                 >
-                  Lưu
+                  Xong
                 </Button>
               </div>
             </Form>
@@ -263,9 +383,50 @@ const FamilyDetail = () => {
           </div>
         </div>
       </div>
-
-      <TitleCard title="Thành viên"></TitleCard>
+      <Button
+        onClick={() => {
+          navigate(`/history/${slug.id}`);
+        }}
+        className="btn-success"
+      >
+        {' '}
+        Lịch sử chỉnh sửa sổ hộ khẩu{' '}
+      </Button>
+      <TitleCard title="Thành viên">
+        <AiOutlinePlusCircle
+          style={{ margin: '5vh 2vw', cursor: 'pointer' }}
+          size={42}
+          onClick={handleShowAddPersonForm}
+        />
+        <ModalAddPeople
+          title="Thêm thành viên"
+          searchedOwner={searchedOwner}
+          searchedOwnerError={searchedOwnerError}
+          formAddPeople={formAddPeople}
+          showModal={modalState === ModalListState.ADD_PERSON}
+          submitAddPeople={submitAddPeople}
+          handleChangeAddPeople={handleChangeAddPeople}
+          handleClose={handleClose}
+        ></ModalAddPeople>
+      </TitleCard>
       <div className="person-container">{renderListPeople(listPeople)}</div>
+      <div
+        style={{
+          width: '100%',
+          display: 'flex',
+          justifyContent: 'flex-end',
+          height: '6vh',
+        }}
+      >
+        <Button
+          onClick={submitEditFamily}
+          style={{ width: '15%' }}
+          variant="primary"
+          type="submit"
+        >
+          Lưu thông tin
+        </Button>
+      </div>
     </Container>
   );
 };

@@ -1,44 +1,77 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Modal, Table } from 'react-bootstrap';
 import { AiOutlinePlusCircle } from 'react-icons/ai';
-import {
-  RiTimerFill
-} from 'react-icons/ri';
+import { RiTimerFill } from 'react-icons/ri';
 import { GrDocumentTxt, GrMoney } from 'react-icons/gr';
 import FormUpdateDetailEvent from '../../components/Form/FormUpdateDetailEvent';
 import ModalContent from '../../components/Modal/Modal';
 import TitleCard from '../../components/Title/TitleCard';
 import { EventFundingInfo, FamilyFundingInfo } from '../../types/eventFunding';
 import { ModalListState } from '../../types/typeGlobal';
+import { useParams } from 'react-router-dom';
+import instance from '../../axiosInstance/axiosInstance';
+import { FaMoneyBillWave } from 'react-icons/fa';
+import { debounce } from 'lodash';
 
 const EventDetail = () => {
-  const [eventFunding, setEventFunding] = useState<EventFundingInfo>({
-    id: 'string',
-    name: 'string',
-    totalAmount: 1,
-    time: 'string',
-    description: 'string',
-    listFamily: [
+  const [eventFundingPay, setEventFundingPay] = useState<EventFundingInfo>({
+    id: 1,
+    eventName: 'string',
+    tongtien: 1,
+    date: 'string',
+    descriptions: 'string',
+    listHKDG: [
       {
         address: '39 Dich Vong Cau Giay',
-        owner: 'Le Hai Thanh',
+        tenChuHo: 'Le Hai Thanh',
         amount: 1,
         time: '15/10/2021',
       },
     ],
   });
+  const [eventFundingNotPay, setEventFundingNotPay] =
+    useState<EventFundingInfo>({
+      id: 1,
+      eventName: 'string',
+      tongtien: 1,
+      date: 'string',
+      descriptions: 'string',
+      listHKDG: [
+        {
+          address: '39 Dich Vong Cau Giay',
+          tenChuHo: 'Le Hai Thanh',
+          amount: 1,
+          time: '15/10/2021',
+        },
+      ],
+    });
+  const [searchedFamily, setSearchedFamily] = useState<[]>();
+  const [searchedFamilyError, setSearchedFamilyError] = useState<string[]>();
 
-  const renderContributeEventFunding = (
-    eventFundingListFamily: FamilyFundingInfo[] | undefined,
+  const renderContributEventFunding = (
+    eventFundingPayListFamily: FamilyFundingInfo[] | undefined,
   ) => {
-    return eventFundingListFamily?.map((family, index) => {
+    return eventFundingPayListFamily?.map((family, index) => {
       return (
         <tr>
           <td>{index + 1}</td>
-          <td>{family.owner}</td>
+          <td>{family.tenChuHo}</td>
           <td>{family.address}</td>
           <td>{family.time} </td>
           <td>{family.amount}</td>
+        </tr>
+      );
+    });
+  };
+  const renderNotContributEventFunding = (
+    eventFundingNotPayListFamily: FamilyFundingInfo[] | undefined,
+  ) => {
+    return eventFundingNotPayListFamily?.map((family, index) => {
+      return (
+        <tr>
+          <td>{index + 1}</td>
+          <td>{family.tenChuHo}</td>
+          <td>{family.address}</td>
         </tr>
       );
     });
@@ -56,77 +89,119 @@ const EventDetail = () => {
     setModalState(ModalListState.CLOSE);
   };
 
+  const slug = useParams();
+
   const [formUpdateEvent, setFormUpdateEvent] = useState({
-    owner: '',
-    time: '',
-    address: '',
+    hoKhau: {
+      id: '000000002',
+    },
+    dongGop: {
+      id: slug.id,
+    },
     amount: 0,
+    time: '',
+    owner: '',
+    address: '',
   });
 
-  const handleUpdateEvent = (event: any) => {
-    setFormUpdateEvent({
-      ...formUpdateEvent,
-      [event.target.name]: event.target.value,
-    });
-    console.log(formUpdateEvent);
-  };
+  const handleUpdateEvent = debounce(async (event: any) => {
+    setSearchedFamilyError([]);
+    setSearchedFamily([]);
+    if (event.target.name === 'owner') {
+      const res = await instance.get(
+        `/hoKhau/search?lastname=${event.target.value}`,
+      );
+      console.log(res.data);
+      if (res.data.status) {
+        setSearchedFamily(res.data.response);
+      } else {
+        setSearchedFamilyError([res.data.response]);
+      }
+    } else {
+      setFormUpdateEvent({
+        ...formUpdateEvent,
+        [event.target.name]: event.target.value,
+      });
+    }
+  }, 1000);
 
-  const submitUpdateEvent = (event: any) => {
+  const submitUpdateEvent = async (event: any) => {
     event.preventDefault();
 
-    //call API to add member to db
+    const res = await instance.post(`/HKdongGop/add`, formUpdateEvent);
 
-    setEventFunding({
-      ...eventFunding,
-      listFamily: [...eventFunding.listFamily, formUpdateEvent],
+    if (res.data.status) {
+      window.location.reload();
+    }
+  };
+
+  const handleChooseFamily = (event: any, family: any) => {
+    setFormUpdateEvent({
+      ...formUpdateEvent,
+      hoKhau: {
+        id: event.target.id,
+      },
+      owner: family.owner,
+      address: family.address,
     });
+    setSearchedFamily([]);
+  };
 
-    handleClose();
+  const fetchEventFundingPay = async () => {
+    const pay = await instance.get(`/dongGop/${slug.id}/payment`);
+    if (pay.status) {
+      setEventFundingPay(pay.data.response);
+    }
+    const notPay = await instance.get(`/dongGop/${slug.id}/notpayment`);
+    if (notPay.status) {
+      setEventFundingNotPay(notPay.data.response);
+    }
   };
 
   useEffect(() => {
-    //call APi here to get event Detail
-    const eventFunding: EventFundingInfo = {
-      id: '1',
-      name: 'Đóng góp hội khuyến học',
-      time: '15/10/2021',
-      totalAmount: 4,
-      description: '',
-      listFamily: [
-        {
-          address: '39 Dich Vong Cau Giay',
-          owner: 'Le Hai Thanh',
-          amount: 1,
-          time: '15/10/2021',
-        },
-        {
-          address: '39 Dich Vong Cau Giay',
-          owner: 'Le Hai Thanh',
-          amount: 1,
-          time: '15/10/2021',
-        },
-        {
-          address: '39 Dich Vong Cau Giay',
-          owner: 'Le Hai Thanh',
-          amount: 1,
-          time: '15/10/2021',
-        },
-        {
-          address: '39 Dich Vong Cau Giay',
-          owner: 'Le Hai Thanh',
-          amount: 1,
-          time: '15/10/2021',
-        },
-      ],
-    };
-
-    setEventFunding(eventFunding);
+    fetchEventFundingPay();
+    setEventFundingPay(eventFundingPay);
   }, []);
 
   return (
     <div>
       <Container>
-        <TitleCard title="Chi tiết quỹ đã thu">
+        <TitleCard title="Chi tiết quỹ" />
+
+        <div className="family-title">
+          <div className="card-title-group">
+            <div className="card-title">
+              <GrMoney />
+              <div className="card-content">
+                Tên quỹ : {eventFundingPay.eventName}
+              </div>
+            </div>
+            <div className="card-title">
+              <RiTimerFill />
+              <div className="card-content">
+                Thời gian thu : {eventFundingPay.date}
+              </div>
+            </div>
+            {!!eventFundingPay.mucphi && (
+              <div className="card-title">
+                <FaMoneyBillWave />
+                <div className="card-content">
+                  Mức phí : {eventFundingPay.mucphi} VNĐ
+                </div>
+              </div>
+            )}
+            {!!eventFundingPay.descriptions && (
+              <div className="card-title">
+                <GrDocumentTxt />
+                <div className="card-content">
+                  Mô tả : {eventFundingPay.descriptions}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <TitleCard title="Các hộ đã đóng tiền">
           <AiOutlinePlusCircle
             style={{ margin: '5vh 2vw', cursor: 'pointer' }}
             size={42}
@@ -138,36 +213,19 @@ const EventDetail = () => {
             backdrop="static"
             keyboard={false}
           >
-            <ModalContent title="Thêm quỹ" handleClose={handleClose}>
+            <ModalContent title="Thêm hộ đóng" handleClose={handleClose}>
               <FormUpdateDetailEvent
+                formUpdateEvent={formUpdateEvent}
+                errSearch={searchedFamilyError}
+                searchedFamily={searchedFamily}
                 handleUpdateEvent={handleUpdateEvent}
                 submitUpdatevent={submitUpdateEvent}
+                handleChooseFamily={handleChooseFamily}
               ></FormUpdateDetailEvent>
             </ModalContent>
           </Modal>
         </TitleCard>
-        <div className="family-title">
-          <div className="card-title-group">
-            <div className="card-title">
-              <GrMoney />
-              <div className="card-content">Tên quỹ : {eventFunding.name}</div>
-            </div>
-            <div className="card-title">
-              <RiTimerFill />
-              <div className="card-content">
-                Thời gian thu : {eventFunding.time}
-              </div>
-            </div>
-            {!!eventFunding.description && (
-              <div className="card-title">
-                <GrDocumentTxt />
-                <div className="card-content">
-                  Mô tả : {eventFunding.description}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+
         <Table responsive="lg" className="mt-2" bordered hover>
           <thead>
             <tr>
@@ -179,33 +237,31 @@ const EventDetail = () => {
             </tr>
           </thead>
           <tbody>
-            {/* <tr>
-              <td>1</td>
-              <td>Mark</td>
-              <td>Otto</td>
-              <td>@mdo</td>
-            </tr>
-            <tr>
-              <td>2</td>
-              <td>Jacob</td>
-              <td>Thornton</td>
-              <td>@fat</td>
-            </tr>
-            <tr>
-              <td>3</td>
-              <td>Lar</td>
-              <td>@twitter</td>
-            </tr> */}
-            {renderContributeEventFunding(eventFunding?.listFamily)}
+            {renderContributEventFunding(eventFundingPay?.listHKDG)}
           </tbody>
           <tfoot>
             <tr>
-              <td colSpan={4} style={{ textAlign: 'center' }}>
-                Tổng số tiền
+              <td colSpan={4} style={{ textAlign: 'center', fontWeight: 700 }}>
+                Tổng số tiền (VNĐ)
               </td>
-              <td>{eventFunding?.totalAmount}</td>
+              <td style={{ fontWeight: 700 }}>{eventFundingPay?.tongtien}</td>
             </tr>
           </tfoot>
+        </Table>
+
+        <TitleCard title="Các hộ chưa đóng tiền"></TitleCard>
+
+        <Table responsive="lg" className="mt-2" bordered hover>
+          <thead>
+            <tr>
+              <th>STT</th>
+              <th>Tên chủ hộ</th>
+              <th>Địa chỉ hộ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {renderNotContributEventFunding(eventFundingNotPay?.listHKDG)}
+          </tbody>
         </Table>
       </Container>
     </div>

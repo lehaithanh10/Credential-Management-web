@@ -11,15 +11,15 @@ export interface EventFundingReduxState {
 
 export const INITIAL_EventFunding_STATE: EventFundingReduxState = {
   currentEventFunding: {
-    id: '1',
-    name: 'Đóng góp hội khuyến học',
-    time: '15/10/2021',
-    totalAmount: 4,
-    description: '',
-    listFamily: [
+    id: 1,
+    eventName: 'Đóng góp hội khuyến học',
+    date: '15/10/2021',
+    tongtien: 4,
+    descriptions: '',
+    listHKDG: [
       {
         address: '39 Dich Vong Cau Giay',
-        owner: 'Le Hai Thanh',
+        tenChuHo: 'Le Hai Thanh',
         amount: 1,
         time: '15/10/2021',
       },
