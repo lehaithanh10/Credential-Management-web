@@ -9,7 +9,7 @@ import ModalAddEvent from '../../components/Modal/AddEventModal';
 import Sidebar from '../../components/Navbar/Sidebar';
 import CustomPagination from '../../components/Pagination/Pagination';
 import TitleCard from '../../components/Title/TitleCard';
-import { renderErrorMessage } from '../../helpers';
+import { notify, renderErrorMessage } from '../../helpers';
 import { setCurrentListEventFunding } from '../../redux/eventFunding/EventFundingAction';
 import { setPageRendering } from '../../redux/pageRendering/PageRenderingAction';
 import { setTotal } from '../../redux/pagination/PaginationAction';
@@ -17,6 +17,8 @@ import { RootState } from '../../redux/reduxStore';
 import { EventFundingInfo } from '../../types/eventFunding';
 import { PageRender } from '../../types/page';
 import { ModalListState } from '../../types/typeGlobal';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const ListEventFunding = () => {
   const listEventFunding: EventFundingInfo[] = useSelector(
@@ -67,13 +69,12 @@ const ListEventFunding = () => {
       const res = await instance.post(`/dongGop/`, formAddEvent);
 
       if (res.data.status) {
-        window.location.reload();
+        handleClose();
+        notify('Thêm quỹ mới thành công', () => window.location.reload());
       }
     } catch (err) {
       alert(err);
     }
-
-    handleClose();
   };
 
   const fetchListEventFunding = async () => {
@@ -119,7 +120,6 @@ const ListEventFunding = () => {
   };
   return (
     <>
-      <Sidebar />
       <Container>
         <TitleCard title="Danh sách các quỹ đóng góp">
           <AiOutlinePlusCircle
@@ -151,6 +151,7 @@ const ListEventFunding = () => {
           )}
         </div>
       </Container>
+      <ToastContainer theme="colored" />
     </>
   );
 };

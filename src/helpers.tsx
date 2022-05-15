@@ -1,3 +1,5 @@
+import { toast } from 'react-toastify';
+
 export const renderErrorMessage = (errs: string[]) => {
   return errs.map((err) => {
     return (
@@ -11,3 +13,9 @@ export const renderErrorMessage = (errs: string[]) => {
     );
   });
 };
+
+export const notify = (message: string, callback: () => void) =>
+  toast.success(message, {
+    autoClose: 2000,
+    onClose: callback,
+  });

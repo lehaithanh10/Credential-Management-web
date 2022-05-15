@@ -2,93 +2,114 @@ import React, { useState, useEffect } from 'react';
 import { Row, Form, Button, Col } from 'react-bootstrap';
 import moment from 'moment';
 import './TamVangForm.scss';
+import { useDispatch } from 'react-redux';
+import { setPageRendering } from '../../redux/pageRendering/PageRenderingAction';
+import { debounce } from 'lodash';
+import instance from '../../axiosInstance/axiosInstance';
+import { renderSearchPeople } from '../FamilyDetail/FamilyDetail';
+import { notify, renderErrorMessage } from '../../helpers';
+import { ToastContainer } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 const TamVangForm = () => {
-  const [today, setToday] = useState(moment(new Date()).format('YYYY-MM-DD'));
+  const [searchedPeopleError, setSearchedPeopleError] = useState<string[]>();
+  const [searchedPeople, setSearchedPeople] = useState<[]>();
   const [form, setForm] = useState({
-    hoTen: '',
-    cccd: '',
-    sdt: '',
-    gioiTinh: true,
-    ngaySinh: '',
-    queQuan: '',
-    thuongTru: '',
-    tamTru: '',
-    noiOHienTai: '',
-    bdTamVang: '',
-    ktTamVang: '',
-    ldTamVang: '',
-    dcNoiDen: '',
+    phoneNumber: '',
+    firstName: '',
+    lastName: '',
+    address: '',
+    dateOfBirth: '',
+    gender: '',
+    job: '',
+    canCuocCongDan: '',
+    specialNotes: 'không',
+    status: 'Tạm vắng',
+    relationship: '',
+    idSHK: '',
+    addressTamTru: '',
+    image:
+      'https://vnn-imgs-a1.vgcloud.vn/image1.ictnews.vn/_Files/2020/03/17/trend-avatar-1.jpg',
+    startTime: '',
+    endTime: '',
   });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
+
+  const handleChoosePerson = (event: any, people: any) => {
+    setForm((form) => ({
+      ...form,
+      ...people,
+      soHoKhau: {
+        id: people.idSHK,
+      },
+    }));
+    setSearchedPeople([]);
+  };
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    console.log({ today });
-    return () => {};
+    dispatch(setPageRendering(undefined));
   }, []);
 
-  const handleSubmit = () => {
-    setError('');
-    console.log({ form });
-    if (!form.hoTen) {
-      setError('Vui lòng nhập Họ tên');
-      return;
+  const handleSubmit = async () => {
+    const res = await instance.post(`/khaiBaoTamVang`, form);
+    console.log(res.data.status);
+    if (res.data.status) {
+      console.log(`/familyDetail/${form.idSHK}`);
+      notify('Đăng ký tạm vắng thành công', () =>
+        navigate(`/familyDetail/${form.idSHK}`),
+      );
     }
-    if (!form.ngaySinh) {
-      setError('Vui lòng nhập Ngày sinh');
-      return;
-    }
-    if (!form.cccd) {
-      setError('Vui lòng nhập số CCCD/CMND');
-      return;
-    }
-    if (!form.queQuan) {
-      setError('Vui lòng nhập Quê quán');
-      return;
-    }
-    if (!form.thuongTru) {
-      setError('Vui lòng nhập Địa chỉ thường trú');
-      return;
-    }
-    if (!form.tamTru) {
-      setError('Vui lòng nhập Địa chỉ tạm trú');
-      return;
-    }
-
-    if (!form.noiOHienTai) {
-      setError('Vui lòng nhập Nơi ở hiện tại');
-      return;
-    }
-
-    if (!form.ldTamVang) {
-      setError('Vui lòng nhập lý do tạm vắng');
-      return;
-    }
-
-    if (!form.dcNoiDen) {
-      setError('Vui lòng nhập Địa chỉ nơi đến');
-      return;
-    }
-
-    setSuccess(true);
   };
+
+  const handleChange = debounce(async (event: any) => {
+    if (event.target.name === 'cccd') {
+      const res = await instance.get(
+        `/congDan/search?cccd=${event.target.value}`,
+      );
+      console.log(res);
+      if (res.data.status) {
+        setSearchedPeople(res.data.response);
+        setSearchedPeopleError([]);
+      } else {
+        setSearchedPeopleError([res.data.response]);
+        setSearchedPeople([]);
+      }
+    }
+    setForm({
+      ...form,
+      [event.target.name]: event.target.value,
+    });
+  }, 1000);
 
   return (
     <div className="insert">
       <div className="title">
         <h3>Thông tin đăng ký tạm vắng</h3>
+        <p style={{ fontStyle: 'italic', fontSize: 12, textAlign: 'center' }}>
+          *Nhập CCCD để thực hiện tìm kiếm thông tin nhanh hơn
+        </p>
       </div>
       <div className="content">
         <Form className="mb-3">
           <Row className="mb-3">
             <Form.Group as={Col} controlId="formGridName">
-              <Form.Label>Họ và tên:</Form.Label>
+              <Form.Label>Họ</Form.Label>
               <Form.Control
                 type="text"
-                placeholder="Nhập họ và tên"
-                value={form.hoTen}
-                //onChange={(event) => handleChange(event, 1)}
+                placeholder={form.firstName ? form.firstName : 'Họ'}
+                name="firstName"
+                onChange={handleChange}
+              />
+            </Form.Group>
+            <Form.Group as={Col} controlId="formGridName">
+              <Form.Label>Họ</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder={form.lastName ? form.lastName : 'Tên'}
+                name="lastName"
+                onChange={handleChange}
               />
             </Form.Group>
 
@@ -96,10 +117,12 @@ const TamVangForm = () => {
               <Form.Label>Ngày sinh:</Form.Label>
               <Form.Control
                 type="date"
-                placeholder="Chọn ngày sinh"
-                max={today}
-                value={form.ngaySinh}
-                //onChange={(event) => handleChange(event, 2)}
+                placeholder={
+                  form.dateOfBirth ? form.dateOfBirth : 'Chọn ngày sinh'
+                }
+                max={moment(new Date()).format('YYYY-MM-DD')}
+                name="dateOfBirth"
+                onChange={handleChange}
               />
             </Form.Group>
 
@@ -108,24 +131,24 @@ const TamVangForm = () => {
               <Form.Group as={Col} className="mb-3" id="formGridMale">
                 <Form.Check
                   type="checkbox"
+                  name="gender"
                   label="Nam"
-                  defaultChecked={form.gioiTinh}
-                  //value={form.gioiTinh}
-                  onClick={(e) =>
-                    setForm({ ...form, gioiTinh: !form.gioiTinh })
-                  }
+                  checked={form.gender === 'Nam'}
+                  onClick={(e) => {
+                    setForm({ ...form, gender: 'Nam' });
+                  }}
                 />
               </Form.Group>
 
               <Form.Group as={Col} className="mb-3" id="formGridFemale">
                 <Form.Check
                   type="checkbox"
+                  name="gender"
                   label="Nữ"
-                  defaultChecked={!form.gioiTinh}
-                  //value={!form.gioiTinh}
-                  onClick={(e) =>
-                    setForm({ ...form, gioiTinh: !form.gioiTinh })
-                  }
+                  checked={form.gender === 'Nữ'}
+                  onClick={(e) => {
+                    setForm({ ...form, gender: 'Nữ' });
+                  }}
                 />
               </Form.Group>
             </Row>
@@ -135,53 +158,45 @@ const TamVangForm = () => {
             <Form.Label>Số CMND/CCCD:</Form.Label>
             <Form.Control
               placeholder="Nhập số CMND/CCCD"
-              value={form.cccd}
-              //onChange={(event) => handleChange(event, 3)}
+              name="cccd"
+              onChange={handleChange}
             />
           </Form.Group>
+          {searchedPeople &&
+            renderSearchPeople(searchedPeople, handleChoosePerson)}
+          {searchedPeopleError && renderErrorMessage(searchedPeopleError)}
 
           <Form.Group className="mb-3" controlId="formGridID">
             <Form.Label>Số điện thoại liên hệ</Form.Label>
             <Form.Control
-              placeholder="Nhập số điện thoại (nếu có)"
-              value={form.sdt}
-              //onChange={(event) => handleChange(event, 3)}
+              placeholder={
+                form.phoneNumber
+                  ? form.phoneNumber
+                  : 'Nhập số điện thoại (nếu có)'
+              }
+              onChange={handleChange}
             />
           </Form.Group>
 
           <Form.Group className="mb-3" controlId="formGridPlace">
             <Form.Label>Quê quán</Form.Label>
-            <Form.Control
-              placeholder="Nhập quê quán"
-              value={form.queQuan}
-              //onChange={(event) => handleChange(event, 4)}
-            />
+            <Form.Control placeholder="Nhập quê quán" />
           </Form.Group>
 
           <Form.Group className="mb-3" controlId="formGridAddress">
             <Form.Label>Địa chỉ thường trú</Form.Label>
             <Form.Control
-              placeholder="Nhập địa chỉ thường trú"
-              value={form.thuongTru}
-              //onChange={(event) => handleChange(event, 5)}
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-3" controlId="formGridAddress">
-            <Form.Label>Địa chỉ tạm trú</Form.Label>
-            <Form.Control
-              placeholder="Nhập địa chỉ tạm trú"
-              value={form.tamTru}
-              //onChange={(event) => handleChange(event, 6)}
+              placeholder={form.address ? form.address : 'Địa chỉ thường trú'}
+              name="address"
+              onChange={handleChange}
             />
           </Form.Group>
 
           <Form.Group className="mb-3" controlId="formGridAddress">
             <Form.Label>Nơi ở hiện tại</Form.Label>
             <Form.Control
-              placeholder="Nhập địa chỉ nơi ở hiện tại"
-              value={form.noiOHienTai}
-              //onChange={(event) => handleChange(event, 6)}
+              name="address"
+              placeholder={form.address ? form.address : 'Nơi ở hiện tại'}
             />
           </Form.Group>
 
@@ -191,9 +206,8 @@ const TamVangForm = () => {
               <Form.Control
                 type="date"
                 placeholder="Chọn ngày bắt đầu"
-                max={today}
-                value={form.bdTamVang}
-                //onChange={(event) => handleChange(event, 2)}
+                name="startTime"
+                onChange={handleChange}
               />
             </Form.Group>
 
@@ -201,10 +215,9 @@ const TamVangForm = () => {
               <Form.Label>đến ngày:</Form.Label>
               <Form.Control
                 type="date"
+                name="endTime"
                 placeholder="Chọn ngày kết thúc"
-                max={today}
-                value={form.ktTamVang}
-                //onChange={(event) => handleChange(event, 2)}
+                onChange={handleChange}
               />
             </Form.Group>
           </Row>
@@ -212,8 +225,7 @@ const TamVangForm = () => {
             <Form.Label>Lý do tạm vắng:</Form.Label>
             <Form.Control
               placeholder="Nhập nội dung lý do tạm vắng"
-              value={form.ldTamVang}
-              //onChange={(event) => handleChange(event, 6)}
+              onChange={handleChange}
             />
           </Form.Group>
 
@@ -221,26 +233,16 @@ const TamVangForm = () => {
             <Form.Label>Địa chỉ nơi đến:</Form.Label>
             <Form.Control
               placeholder="Nhập địa chỉ nơi đến"
-              value={form.dcNoiDen}
-              //onChange={(event) => handleChange(event, 6)}
+              onChange={handleChange}
             />
           </Form.Group>
 
-          {error ? (
-            <Form.Group className="mb-3">
-              <Form.Text className="text-danger">{error}</Form.Text>
-            </Form.Group>
-          ) : null}
-
-          <Button
-            variant="primary"
-            //type={success ? "submit" : null}
-            onClick={handleSubmit}
-          >
+          <Button variant="primary" onClick={handleSubmit}>
             Gửi
           </Button>
         </Form>
       </div>
+      <ToastContainer theme="colored" />
     </div>
   );
 };

@@ -9,6 +9,7 @@ interface CredentialCardProps {
   status: string;
   job: string;
   address: string;
+  canCuocCongDan: string;
   onClick: () => void;
 }
 
@@ -21,9 +22,9 @@ const CredentialCard = (props: CredentialCardProps) => {
       </div>
       <div className="bottom">
         <p className="info">Số điện thoại: {props.phoneNumber}</p>
+        <p className="info">Số CCCD/ Mã định danh: {props.canCuocCongDan}</p>
         <p className="info">Nghề nghiệp: {props.job}</p>
         <p className="info">Địa chỉ: {props.address}</p>
-        <p className="info">Tình trạng: {props.status}</p>
       </div>
     </div>
   );

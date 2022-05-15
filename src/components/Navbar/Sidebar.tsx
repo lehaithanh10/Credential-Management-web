@@ -52,7 +52,7 @@ const Sidebar: FC = () => {
     ownerName: '',
   });
   const showSidebar = () => setSidebar(!sidebar);
-  const pageRendering: PageRender = useSelector(
+  const pageRendering: PageRender | undefined = useSelector(
     (state: RootState) => state.pageRendering.currentPageRendering,
   );
   const dispatch = useDispatch();
@@ -94,7 +94,7 @@ const Sidebar: FC = () => {
       case PageRender.LIST_CREDENTIAL:
         {
           const res = await instance.get(
-            `congDan/search?lastname=${formSearch.ownerName}`,
+            `congDan/search?lastname=${formSearch.ownerName}&pageSize=4&page=1`,
           );
           console.log(res.data);
           if (res.data.status) {
@@ -147,22 +147,24 @@ const Sidebar: FC = () => {
         <NavIcon to="#" onClick={showSidebar}>
           <AiOutlineMenu />
         </NavIcon>
-        <Form className="">
-          <Row className="align-items-center d-flex justify-content-center ml-1">
-            <FormControl
-              type="search"
-              placeholder={generateSearchSuggestion(pageRendering)}
-              className="search-field me-2"
-              aria-label="Search"
-              onChange={handleChangeSearchFamily}
-            />
-            <Col xs="auto">
-              <Button onClick={handleClickSearchFamily} variant="primary">
-                Tìm
-              </Button>
-            </Col>
-          </Row>
-        </Form>
+        {!!pageRendering && (
+          <Form className="">
+            <Row className="align-items-center d-flex justify-content-center ml-1">
+              <FormControl
+                type="search"
+                placeholder={generateSearchSuggestion(pageRendering)}
+                className="search-field me-2"
+                aria-label="Search"
+                onChange={handleChangeSearchFamily}
+              />
+              <Col xs="auto">
+                <Button onClick={handleClickSearchFamily} variant="primary">
+                  Tìm
+                </Button>
+              </Col>
+            </Row>
+          </Form>
+        )}
         <div className="auth-space-wrapper">
           <FaUserAlt />
           <div className="auth-space">Đăng nhập/Đăng ký</div>

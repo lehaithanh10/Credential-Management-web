@@ -9,6 +9,8 @@ interface FormUpdateDetailEventProps {
   handleUpdateEvent: (event: any) => void;
   submitUpdatevent: (event: any) => void;
   handleChooseFamily: (event: any, family: any) => void;
+  disableButton: boolean;
+  errorMessage?: string[];
 }
 export const renderSearchFamily = (
   listFamily: [],
@@ -37,6 +39,7 @@ const FormUpdateDetailEvent = (props: FormUpdateDetailEventProps) => {
     <div>
       <div>
         {props.errSearch && renderErrorMessage(props.errSearch)}
+        {props.errorMessage && renderErrorMessage(props.errorMessage)}
 
         <Form className="add-member-form" onSubmit={props.submitUpdatevent}>
           <Form.Group className="mb-3">
@@ -80,10 +83,14 @@ const FormUpdateDetailEvent = (props: FormUpdateDetailEventProps) => {
           </Form.Group>
 
           <div className="button-add">
-            <Button style={{ width: '20%' }} variant="primary" type="submit">
+            <Button
+              style={{ width: '20%' }}
+              variant="primary"
+              type="submit"
+              disabled={props.disableButton}
+            >
               Thêm
             </Button>
-            
           </div>
           <p style={{ fontStyle: 'italic', fontSize: 12 }}>
             *Nhập tên chủ hộ để thực hiện tìm kiếm hộ gia đình nhanh hơn

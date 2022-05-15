@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Row, Form, Button, Col } from 'react-bootstrap';
 import moment from 'moment';
 import './TamTruForm.scss';
@@ -6,6 +6,11 @@ import instance from '../../axiosInstance/axiosInstance';
 import { debounce } from 'lodash';
 import { renderSearchFamily } from '../../components/Form/FormUpdateDetailEvent';
 import { renderErrorMessage } from '../../helpers';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { setPageRendering } from '../../redux/pageRendering/PageRenderingAction';
 
 const TamTruForm = () => {
   const [familySearched, setFamilySearched] = useState<[]>();
@@ -28,6 +33,12 @@ const TamTruForm = () => {
       'https://vnn-imgs-a1.vgcloud.vn/image1.ictnews.vn/_Files/2020/03/17/trend-avatar-1.jpg',
     nameOwner: '',
   });
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(setPageRendering(undefined));
+  }, []);
 
   const handleChooseFamily = (event: any, family: any) => {
     setForm({
@@ -38,13 +49,18 @@ const TamTruForm = () => {
     });
     setFamilySearched([]);
   };
+  const notify = () =>
+    toast.success('Đăng ký tạm trú thành công', {
+      autoClose: 3000,
+      onClose: () => navigate(`/familyDetail/${form.idSHK}`),
+    });
 
   const handleSubmit = async () => {
     const res = await instance.post('/congDan', form);
 
     console.log(res.data);
     if (res.data.status) {
-      console.log('here success');
+      notify();
     }
   };
 
@@ -57,7 +73,7 @@ const TamTruForm = () => {
         setFamilySearched(res.data.response);
         setErrSearched([]);
       } else {
-        setErrSearched(res.data.response);
+        setErrSearched([res.data.response]);
       }
     }
     setForm({
@@ -220,6 +236,14 @@ const TamTruForm = () => {
                 name="ownerCccd"
                 onChange={handleChange}
               />
+              <p
+                style={{
+                  fontStyle: 'italic',
+                  fontSize: 12,
+                }}
+              >
+                *Nhập CCCD để thực hiện tìm kiếm thông tin nhanh hơn
+              </p>
             </Form.Group>
           </Row>
           {!!familySearched &&
@@ -238,6 +262,7 @@ const TamTruForm = () => {
             Gửi
           </Button>
         </Form>
+        <ToastContainer theme="colored" />
       </div>
     </div>
   );

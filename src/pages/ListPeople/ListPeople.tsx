@@ -14,10 +14,12 @@ import ModalAddPeople from '../../components/Modal/AddPeopleModal';
 import { IFormAddPeople } from '../../types/form';
 import CredentialCard from '../../components/CredentialCard/CredentialCard';
 import { debounce } from 'lodash';
-import Sidebar from '../../components/Navbar/Sidebar';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { RootState } from '../../redux/reduxStore';
 import { setCurrentListPeople } from '../../redux/person/PersonAction';
 import { setTotal } from '../../redux/pagination/PaginationAction';
+import { notify } from '../../helpers';
 
 const ListPeople = () => {
   const listPeople: PersonInfo[] = useSelector(
@@ -69,6 +71,7 @@ const ListPeople = () => {
 
   const renderListPeople = (listPeople: PersonInfo[]) => {
     return listPeople.map((person) => {
+      console.log(listPeople);
       return (
         <CredentialCard
           id={person.id}
@@ -78,6 +81,7 @@ const ListPeople = () => {
           job={person.job}
           address={person.address}
           status={person.status}
+          canCuocCongDan={person.canCuocCongDan}
           onClick={() => {
             handleClickPersonCard(person.id);
           }}
@@ -96,7 +100,7 @@ const ListPeople = () => {
   const handleChangeAddPeople = debounce(async (event: any) => {
     setSearchedOwnerError([]);
     setSearchedOwner([]);
-    if (event.target.name === 'cccdOwner') {
+    if (event.target.name === 'cccdOwner' && event.target.value) {
       const res = await instance.get(
         `/congDan/search?cccd=${event.target.value}`,
       );
@@ -133,7 +137,8 @@ const ListPeople = () => {
     console.log(res.data);
 
     if (res.data.status) {
-      // window.location.reload();
+      handleClose();
+      notify('Thêm công dân thành công', () => window.location.reload());
     }
   };
 
@@ -155,7 +160,6 @@ const ListPeople = () => {
 
   return (
     <>
-      <Sidebar />
       <Container>
         <TitleCard title="Danh sách nhân khẩu">
           <AiOutlinePlusCircle
@@ -187,6 +191,7 @@ const ListPeople = () => {
           )}
         </div>
       </Container>
+      <ToastContainer theme="colored" />
     </>
   );
 };

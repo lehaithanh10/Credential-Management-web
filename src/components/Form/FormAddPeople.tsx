@@ -82,7 +82,7 @@ const FormAddPeople = (props: IFormAddPeopleProps) => {
 
         <Row className="mb-3">
           <Form.Group as={Col}>
-            <Form.Label>Căn cước công dân</Form.Label>
+            <Form.Label>Số CCCD/ Mã định danh</Form.Label>
             <Form.Control
               placeholder="Căn cước công dân"
               onChange={props.handleChangeAddPeople}
@@ -167,7 +167,7 @@ const FormAddPeople = (props: IFormAddPeopleProps) => {
         {props.searchedOwner &&
           renderSearchOwner(props.searchedOwner, props.handleChooseOwner)}
         <p style={{ fontStyle: 'italic', fontSize: 12 }}>
-          *Nhập căn cước công dân để thực hiện tìm kiếm thông tin nhanh hơn
+          *Nhập căn cước công dân chủ hộ để thực hiện tìm kiếm thông tin nhanh hơn
         </p>
         <div className="button-add">
           <Button style={{ width: '20%' }} variant="primary" type="submit">

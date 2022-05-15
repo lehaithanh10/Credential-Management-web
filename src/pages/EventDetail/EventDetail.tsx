@@ -12,6 +12,11 @@ import { useParams } from 'react-router-dom';
 import instance from '../../axiosInstance/axiosInstance';
 import { FaMoneyBillWave } from 'react-icons/fa';
 import { debounce } from 'lodash';
+import { setPageRendering } from '../../redux/pageRendering/PageRenderingAction';
+import { useDispatch } from 'react-redux';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { notify } from '../../helpers';
 
 const EventDetail = () => {
   const [eventFundingPay, setEventFundingPay] = useState<EventFundingInfo>({
@@ -47,6 +52,8 @@ const EventDetail = () => {
     });
   const [searchedFamily, setSearchedFamily] = useState<[]>();
   const [searchedFamilyError, setSearchedFamilyError] = useState<string[]>();
+  const [disableButton, setDisableButton] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string[]>();
 
   const renderContributEventFunding = (
     eventFundingPayListFamily: FamilyFundingInfo[] | undefined,
@@ -107,7 +114,17 @@ const EventDetail = () => {
   const handleUpdateEvent = debounce(async (event: any) => {
     setSearchedFamilyError([]);
     setSearchedFamily([]);
+    if (event.target.name === 'amount') {
+      if (Number(event.target.value) < 0) {
+        setDisableButton(true);
+        setErrorMessage(['Số tiền không được âm']);
+      } else {
+        setDisableButton(false);
+        setErrorMessage([]);
+      }
+    }
     if (event.target.name === 'owner') {
+      console.log('here');
       const res = await instance.get(
         `/hoKhau/search?lastname=${event.target.value}`,
       );
@@ -131,7 +148,8 @@ const EventDetail = () => {
     const res = await instance.post(`/HKdongGop/add`, formUpdateEvent);
 
     if (res.data.status) {
-      window.location.reload();
+      handleClose();
+      notify('Thêm hộ đóng thành công', () => window.location.reload());
     }
   };
 
@@ -157,8 +175,10 @@ const EventDetail = () => {
       setEventFundingNotPay(notPay.data.response);
     }
   };
+  const dispatch = useDispatch();
 
   useEffect(() => {
+    dispatch(setPageRendering(undefined));
     fetchEventFundingPay();
     setEventFundingPay(eventFundingPay);
   }, []);
@@ -221,6 +241,8 @@ const EventDetail = () => {
                 handleUpdateEvent={handleUpdateEvent}
                 submitUpdatevent={submitUpdateEvent}
                 handleChooseFamily={handleChooseFamily}
+                disableButton={disableButton}
+                errorMessage={errorMessage}
               ></FormUpdateDetailEvent>
             </ModalContent>
           </Modal>
@@ -264,6 +286,7 @@ const EventDetail = () => {
           </tbody>
         </Table>
       </Container>
+      <ToastContainer theme="colored" />
     </div>
   );
 };

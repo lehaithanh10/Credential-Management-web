@@ -32,7 +32,7 @@ const EventFundingCard = (props: EventFundingCardProps) => {
             <div className="card-title">
               <FaMoneyBillWave />
               <div className="card-content">
-                Tổng số tiền : {props.tongtien}
+                Tổng số tiền đã thu : {props.tongtien}
               </div>
             </div>
           </div>

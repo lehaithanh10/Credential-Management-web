@@ -19,12 +19,13 @@ import instance from '../../axiosInstance/axiosInstance';
 //import { debounce } from 'lodash';
 import { PersonInfo } from '../../types/person';
 import { RootState } from '../../redux/reduxStore';
-import { renderErrorMessage } from '../../helpers';
+import { notify, renderErrorMessage } from '../../helpers';
 import CustomPagination from '../../components/Pagination/Pagination';
 import { setCurrentErrorSearch } from '../../redux/errorSearch/ErrorSearchAction';
 import { debounce } from 'lodash';
 import { setTotal } from '../../redux/pagination/PaginationAction';
-import Sidebar from '../../components/Navbar/Sidebar';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const ListFamily = () => {
   const listFamily: FamilyInfo[] = useSelector(
@@ -96,7 +97,8 @@ const ListFamily = () => {
       if (!res.data.status) {
         setErr([...err, res.data.response]);
       } else {
-        window.location.reload();
+        handleClose();
+        notify('Thêm hộ gia đình thành công', () => window.location.reload());
       }
     } catch (err) {
       alert(err);
@@ -158,7 +160,6 @@ const ListFamily = () => {
 
   return (
     <>
-      <Sidebar />
       <Container>
         <TitleCard title="Danh sách các hộ gia đình">
           <AiOutlinePlusCircle
@@ -204,6 +205,10 @@ const ListFamily = () => {
                     name="ownerPersonalId"
                   />
                 </Form.Group>
+                <p style={{ fontStyle: 'italic', fontSize: 12 }}>
+                  *Nhập căn cước công dân để thực hiện tìm kiếm thông tin nhanh
+                  hơn
+                </p>
 
                 <div className="button-add">
                   <Button
@@ -233,6 +238,7 @@ const ListFamily = () => {
           )}
         </div>
       </Container>
+      <ToastContainer theme="colored" />
     </>
   );
 };

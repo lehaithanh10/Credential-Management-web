@@ -1,9 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Card, Form, Container, Row, Col } from 'react-bootstrap';
+import { useDispatch } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import '../../assets/img/face-3.jpg';
 import instance from '../../axiosInstance/axiosInstance';
+import { setPageRendering } from '../../redux/pageRendering/PageRenderingAction';
 import './PersonDetail.scss';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { notify } from '../../helpers';
 
 const PersonDetail = () => {
   const [formEditPerson, setFormEditPerson] = useState({
@@ -30,7 +35,9 @@ const PersonDetail = () => {
     const res = await instance.put('/congDan', formEditPerson);
 
     if (res.data.status) {
-      window.location.reload();
+      notify('Cập nhật thông tin công dân thành công', () =>
+        window.location.reload(),
+      );
 
       // alert('Cập nhật thông tin thành công');
     }
@@ -52,7 +59,10 @@ const PersonDetail = () => {
     }
   };
 
+  const dispatch = useDispatch();
+
   useEffect(() => {
+    dispatch(setPageRendering(undefined));
     fetchPersonInfo();
   }, []);
   return (
@@ -289,6 +299,7 @@ const PersonDetail = () => {
           </Col>
         </Row>
       </Container>
+      <ToastContainer theme="colored" />
     </>
   );
 };

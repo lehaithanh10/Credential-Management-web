@@ -23,6 +23,9 @@ import { PersonInfo, PersonStatus } from '../../types/person';
 import { ModalListState } from '../../types/typeGlobal';
 import './FamilyDetail.scss';
 import PersonCardFamilyMember from '../../components/FamilyMemberCard/FamilyMemberCard';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { setPageRendering } from '../../redux/pageRendering/PageRenderingAction';
 
 interface formEditFamily {
   address: string;
@@ -62,6 +65,7 @@ const FamilyDetail = () => {
     (state: RootState) => state.family.currentFamily,
   );
   const [listPeople, setListPeople] = useState<PersonInfo[]>([]);
+  const [listTamTruPeople, setListTamTruPeople] = useState<PersonInfo[]>([]);
   const [searchedPeopleError, setSearchedPeopleError] = useState<string[]>();
   const [searchedPeople, setSearchedPeople] = useState<[]>();
   const [formEditFamily, setFormEditFamily] = useState<formEditFamily>({
@@ -80,7 +84,7 @@ const FamilyDetail = () => {
     relationship: '',
     job: '',
     status: PersonStatus.LIVE,
-    canCuocCongDan: '',
+    canCuocCongDan: undefined,
     firstName: '',
     lastName: '',
     address: '',
@@ -157,7 +161,16 @@ const FamilyDetail = () => {
       });
     }
   }, 1000);
-
+  const notifyUpdateFamilyInfo = () =>
+    toast.success('Cập nhật thông tin hộ gia đình thành công', {
+      autoClose: 2000,
+      onClose: () => window.location.reload(),
+    });
+  const notifyAddPeople = () =>
+    toast.success('Thêm thành viên thành công', {
+      autoClose: 2000,
+      onClose: () => window.location.reload(),
+    });
   const submitEditFamily = async (event: any) => {
     event.preventDefault();
     console.log(formEditFamily);
@@ -169,7 +182,7 @@ const FamilyDetail = () => {
 
     console.log(res.data);
     if (res.data.status) {
-      window.location.reload();
+      notifyUpdateFamilyInfo();
     }
   };
   const navigate = useNavigate();
@@ -226,10 +239,20 @@ const FamilyDetail = () => {
         };
       },
     );
-    setListPeople(res.data.response.members);
+    setListPeople(
+      res.data.response.members.filter(
+        (member: any) => member.status !== 'Tạm trú',
+      ),
+    );
+    setListTamTruPeople(
+      res.data.response.members.filter(
+        (member: any) => member.status === 'Tạm trú',
+      ),
+    );
     setFormEditFamily((formEditFamily) => ({
       ...formEditFamily,
       members: memberWithIdAndRelationship,
+      address: res.data.response.address,
     }));
     dispatch(setCurrentFamily(res.data.response));
   };
@@ -254,13 +277,14 @@ const FamilyDetail = () => {
     const res = await instance.post('/congDan', formAddPeople);
 
     if (res.data.status) {
-      window.location.reload();
+      notifyAddPeople();
     }
 
     handleClose();
   };
 
   useEffect(() => {
+    dispatch(setPageRendering(undefined));
     fetchListFamilyMember();
   }, []);
 
@@ -410,6 +434,15 @@ const FamilyDetail = () => {
         ></ModalAddPeople>
       </TitleCard>
       <div className="person-container">{renderListPeople(listPeople)}</div>
+      {!!listTamTruPeople.length && (
+        <>
+          <TitleCard title="Thành viên tạm trú" />
+          <div className="person-container">
+            {renderListPeople(listTamTruPeople)}
+          </div>
+        </>
+      )}
+
       <div
         style={{
           width: '100%',
@@ -427,6 +460,7 @@ const FamilyDetail = () => {
           Lưu thông tin
         </Button>
       </div>
+      <ToastContainer theme="colored" />
     </Container>
   );
 };

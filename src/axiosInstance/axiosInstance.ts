@@ -1,6 +1,5 @@
 import axios from 'axios';
-const tokenJWT =
-  'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoYWl0aGFuaCIsImlhdCI6MTY0MDY0ODQ0MCwiZXhwIjoxNjQwNzM0ODQwfQ.NXO4wAFkZLrxPJgXkpcD1_diqcr9AbEK089vPQExRRlmZ2S_a5lVdyCDhZwncicNElfxGIjVBwwQYVeDuT0hFg';
+const tokenJWT = process.env.JWTTOKEN
 const instance = axios.create({
   baseURL: 'http://localhost:8080/api',
 });

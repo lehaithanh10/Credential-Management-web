@@ -5,7 +5,7 @@ import {
 } from './PageRenderingAction';
 
 export interface PageRenderingReduxState {
-  currentPageRendering: PageRender;
+  currentPageRendering?: PageRender;
 }
 
 export const INITIAL_PageRendering_STATE: PageRenderingReduxState = {

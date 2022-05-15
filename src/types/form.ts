@@ -30,7 +30,7 @@ export interface IFormAddPeople {
   lastName: string;
   specialNotes: string;
   departmentTime?: string;
-  canCuocCongDan: string;
+  canCuocCongDan?: string;
   phoneNumber: string;
   gender: string;
   dateOfBirth: string;

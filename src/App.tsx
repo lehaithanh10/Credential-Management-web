@@ -12,9 +12,12 @@ import SignupForm from './pages/Signup/SignupForm';
 import TamTruForm from './pages/DKTamTru/TamTruForm';
 import TamVangForm from './pages/DKTamVang/TamVangForm';
 import HistoryFamily from './pages/HistoryFamily/HistoryFamily';
+import Sidebar from './components/Navbar/Sidebar';
 const App: FC = () => {
   return (
     <Router>
+      <Sidebar />
+
       <Routes>
         <Route path="/family" element={<ListFamily />}></Route>
         <Route path="/people" element={<ListPeople />}></Route>
