@@ -1,9 +1,70 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Card, Form, Container, Row, Col } from 'react-bootstrap';
+import { useDispatch } from 'react-redux';
+import { useParams } from 'react-router-dom';
 import '../../assets/img/face-3.jpg';
+import instance from '../../axiosInstance/axiosInstance';
+import { setPageRendering } from '../../redux/pageRendering/PageRenderingAction';
 import './PersonDetail.scss';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { notify } from '../../helpers';
 
 const PersonDetail = () => {
+  const [formEditPerson, setFormEditPerson] = useState({
+    id: 0,
+    image:
+      'https://vnn-imgs-a1.vgcloud.vn/image1.ictnews.vn/_Files/2020/03/17/trend-avatar-1.jpg',
+    phoneNumber: '',
+    job: '',
+    relationship: '',
+    status: '',
+    canCuocCongDan: '',
+    address: '',
+    dateOfBirth: '',
+    firstName: '',
+    gender: '',
+    lastName: '',
+    idSHKSoHuu: '',
+    specialNotes: 'Không',
+    departmentTime: '',
+  });
+  const slug = useParams();
+
+  const submitUpdatePersonInfo = async () => {
+    const res = await instance.put('/congDan', formEditPerson);
+
+    if (res.data.status) {
+      notify('Cập nhật thông tin công dân thành công', () =>
+        window.location.reload(),
+      );
+
+      // alert('Cập nhật thông tin thành công');
+    }
+  };
+
+  const handleChangeEditPersonInfo = (event: any) => {
+    setFormEditPerson({
+      ...formEditPerson,
+      [event.target.name]: event.target.value,
+    });
+  };
+
+  const fetchPersonInfo = async () => {
+    const res = await instance.get(`congDan/${slug.id}`);
+    console.log(res.data);
+    if (res.status) {
+      setFormEditPerson(res.data.response);
+      console.log(formEditPerson);
+    }
+  };
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(setPageRendering(undefined));
+    fetchPersonInfo();
+  }, []);
   return (
     <>
       <Container>
@@ -22,8 +83,14 @@ const PersonDetail = () => {
                       <Form.Group className="mb-3">
                         <label className="mb-2">Họ</label>
                         <Form.Control
-                          placeholder="Họ"
+                          onChange={handleChangeEditPersonInfo}
+                          placeholder={
+                            formEditPerson?.firstName
+                              ? formEditPerson.firstName
+                              : 'Họ'
+                          }
                           type="text"
+                          name="firstName"
                         ></Form.Control>
                       </Form.Group>
                     </Col>
@@ -31,8 +98,14 @@ const PersonDetail = () => {
                       <Form.Group className="mb-3">
                         <label className="mb-2">Tên</label>
                         <Form.Control
-                          placeholder="Tên"
+                          onChange={handleChangeEditPersonInfo}
+                          placeholder={
+                            formEditPerson?.lastName
+                              ? formEditPerson.lastName
+                              : 'Tên'
+                          }
                           type="text"
+                          name="lastName"
                         ></Form.Control>
                       </Form.Group>
                     </Col>
@@ -40,9 +113,15 @@ const PersonDetail = () => {
                       <Form.Group className="mb-3">
                         <label className="mb-2">Giới tính</label>
                         <Form.Control
-                          placeholder="Giới tính"
+                          onChange={handleChangeEditPersonInfo}
+                          placeholder={
+                            formEditPerson?.gender
+                              ? formEditPerson.gender
+                              : 'Giới tính'
+                          }
                           type="text"
                           list="genders"
+                          name="gender"
                         ></Form.Control>
                         <datalist id="genders">
                           <option value="Nam" />
@@ -57,7 +136,12 @@ const PersonDetail = () => {
                       <Form.Group className="mb-3">
                         <label className="mb-2">Căn cước công dân</label>
                         <Form.Control
-                          placeholder="Căn cước công dân"
+                          readOnly
+                          placeholder={
+                            formEditPerson?.canCuocCongDan
+                              ? formEditPerson.canCuocCongDan
+                              : 'Căn cước công dân'
+                          }
                           type="text"
                         ></Form.Control>
                       </Form.Group>
@@ -66,8 +150,14 @@ const PersonDetail = () => {
                       <Form.Group className="mb-3">
                         <label className="mb-2">Số điện thoại</label>
                         <Form.Control
-                          placeholder="Số điện thoại"
+                          onChange={handleChangeEditPersonInfo}
+                          placeholder={
+                            formEditPerson?.phoneNumber
+                              ? formEditPerson.phoneNumber
+                              : 'Số điện thoại'
+                          }
                           type="text"
+                          name="phoneNumber"
                         ></Form.Control>
                       </Form.Group>
                     </Col>
@@ -77,7 +167,12 @@ const PersonDetail = () => {
                       <Form.Group className="mb-3">
                         <label className="mb-2">Địa chỉ</label>
                         <Form.Control
-                          placeholder="Địa chỉ"
+                          readOnly
+                          placeholder={
+                            formEditPerson?.address
+                              ? formEditPerson.address
+                              : 'Địa chỉ'
+                          }
                           type="text"
                         ></Form.Control>
                       </Form.Group>
@@ -86,7 +181,12 @@ const PersonDetail = () => {
                       <Form.Group className="mb-3">
                         <label className="mb-2">Số sổ hộ khẩu</label>
                         <Form.Control
-                          placeholder="Số sổ hộ khẩu"
+                          readOnly
+                          placeholder={
+                            formEditPerson?.idSHKSoHuu
+                              ? formEditPerson.idSHKSoHuu
+                              : 'Số sổ hộ khẩu'
+                          }
                           type="text"
                         ></Form.Control>
                       </Form.Group>
@@ -97,8 +197,14 @@ const PersonDetail = () => {
                       <Form.Group className="mb-3">
                         <label className="mb-2">Nghề nghiệp</label>
                         <Form.Control
-                          placeholder="Nghề nghiệp"
+                          onChange={handleChangeEditPersonInfo}
+                          placeholder={
+                            formEditPerson?.job
+                              ? formEditPerson.job
+                              : 'Nghề nghiệp'
+                          }
                           type="text"
+                          name="job"
                         ></Form.Control>
                       </Form.Group>
                     </Col>
@@ -106,7 +212,12 @@ const PersonDetail = () => {
                       <Form.Group className="mb-3">
                         <label className="mb-2">Quan hệ với chủ hộ</label>
                         <Form.Control
-                          placeholder="Quan hệ với chủ hộ"
+                          readOnly
+                          placeholder={
+                            formEditPerson?.relationship
+                              ? formEditPerson.relationship
+                              : 'Quan hệ với chủ hộ'
+                          }
                           type="text"
                         ></Form.Control>
                       </Form.Group>
@@ -117,12 +228,20 @@ const PersonDetail = () => {
                       <Form.Group className="mb-3">
                         <label className="mb-2">Tình trạng</label>
                         <Form.Control
-                          placeholder="Tình trạng"
+                          readOnly
+                          onChange={handleChangeEditPersonInfo}
+                          placeholder={
+                            formEditPerson?.status
+                              ? formEditPerson.status
+                              : 'Tình trạng'
+                          }
                           type="text"
                           list="status"
+                          name="status"
+                          disabled={formEditPerson.relationship === 'Chủ hộ'}
                         ></Form.Control>
                         <datalist id="status">
-                          <option value="Đang ở" />
+                          <option value="Đang cư trú" />
                           <option value="Đã chuyển đi" />
                           <option value="Qua đời" />
                         </datalist>
@@ -134,8 +253,15 @@ const PersonDetail = () => {
                           Thời gian chuyển đi/qua đời
                         </label>
                         <Form.Control
-                          placeholder="Thời gian chuyển đi/qua đời"
-                          type="text"
+                          readOnly
+                          onChange={handleChangeEditPersonInfo}
+                          value={
+                            formEditPerson?.departmentTime
+                              ? formEditPerson.departmentTime
+                              : 'Thời gian chuyển đi/qua đời'
+                          }
+                          type="date"
+                          name="departmentTime"
                         ></Form.Control>
                       </Form.Group>
                     </Col>
@@ -143,8 +269,9 @@ const PersonDetail = () => {
 
                   <Button
                     className="btn-fill pull-right mt-2"
-                    type="submit"
+                    type="button"
                     variant="info"
+                    onClick={submitUpdatePersonInfo}
                   >
                     Cập nhật thông tin
                   </Button>
@@ -154,22 +281,25 @@ const PersonDetail = () => {
             </Card>
           </Col>
           <Col md="4">
-            <Card className="card-user">
+            <Card className="card-user-pic">
               <Card.Body>
                 <div className="author">
                   <img
                     alt="..."
                     className="avatar border-gray"
-                    src={require('../../assets/img/face-3.jpg').default}
+                    src={formEditPerson?.image}
                   ></img>
-                  <h5 className="title">Mike Andrew</h5>
-                  <h5 className="title">001201021785</h5>
+                  <h5 className="title mt-2">
+                    {formEditPerson?.firstName} {formEditPerson?.lastName}
+                  </h5>
+                  <h5 className="title">{formEditPerson?.canCuocCongDan}</h5>
                 </div>
               </Card.Body>
             </Card>
           </Col>
         </Row>
       </Container>
+      <ToastContainer theme="colored" />
     </>
   );
 };

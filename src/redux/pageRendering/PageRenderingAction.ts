@@ -6,11 +6,11 @@ export enum PageRenderingAction {
 
 export interface PageRenderingGeneralAction<T> {
   type: PageRenderingAction;
-  payload: T;
+  payload?: T;
 }
 
 export const setPageRendering = (
-  page: PageRender,
+  page?: PageRender,
 ): PageRenderingGeneralAction<PageRender> => {
   return { type: PageRenderingAction.CHANGE_PAGE_RENDER, payload: page };
 };

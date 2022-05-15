@@ -1,14 +1,16 @@
 export interface EventFundingInfo {
-  id: string;
-  name: string;
-  totalAmount: number;
-  time: string;
-  description: string;
-  listFamily?: FamilyFundingInfo[];
+  id: number;
+  eventName: string;
+  tongtien: number;
+  date: string;
+  descriptions: string;
+  mucphi?: number;
+  listHKDG: FamilyFundingInfo[];
 }
 
 export interface FamilyFundingInfo {
   address: string;
-  nameOnwer: string;
+  tenChuHo: string;
   amount: number;
+  time: string;
 }

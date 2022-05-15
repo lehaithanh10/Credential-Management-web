@@ -1,4 +1,5 @@
 import { FamilyInfo } from '../../types/family';
+import { PersonStatus } from '../../types/person';
 import { FamilyAction, FamilyGeneralAction } from './FamilyAction';
 
 export interface FamilyReduxState {
@@ -25,11 +26,11 @@ export const INITIAL_FAMILY_STATE: FamilyReduxState = {
         job: 'Học sinh',
         relationship: 'Chủ hộ',
         specialNotes: 'không',
-        status: 'Đang cư trú',
+        status: PersonStatus.LIVE,
         image:
           'https://vnn-imgs-a1.vgcloud.vn/image1.ictnews.vn/_Files/2020/03/17/trend-avatar-1.jpg',
         phoneNumber: '',
-        idSHK: '',
+        idSHKSoHuu: '',
       },
     ],
   },

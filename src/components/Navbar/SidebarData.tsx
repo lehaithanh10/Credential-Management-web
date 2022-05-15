@@ -25,12 +25,12 @@ export const SidebarData: SidebarItem[] = [
       },
       {
         title: 'Đăng ký tạm trú',
-        path: '/overview/revenue',
+        path: '/tamtru',
         icon: <HiOutlineDocumentAdd />,
       },
       {
         title: 'Đăng ký tạm vắng',
-        path: '/overview/revenue',
+        path: '/tamvang',
         icon: <HiDocumentRemove />,
       },
     ],

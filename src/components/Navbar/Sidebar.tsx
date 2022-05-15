@@ -13,6 +13,10 @@ import { RootState } from '../../redux/reduxStore';
 import { PageRender } from '../../types/page';
 import instance from '../../axiosInstance/axiosInstance';
 import { setCurrentListFamily } from '../../redux/family/FamilyAction';
+import { setCurrentErrorSearch } from '../../redux/errorSearch/ErrorSearchAction';
+import { setCurrentListEventFunding } from '../../redux/eventFunding/EventFundingAction';
+import { setTotal } from '../../redux/pagination/PaginationAction';
+import { setCurrentListPeople } from '../../redux/person/PersonAction';
 
 const SidebarNav = styled.div<{ sidebar: boolean }>`
   width: 300px;
@@ -42,15 +46,13 @@ interface Search {
 
 const Sidebar: FC = () => {
   const [sidebar, setSidebar] = useState<boolean>(false);
-  const [displayAdvanceSearch, setDisplayAdvanceSearch] =
-    useState<boolean>(false);
   const [formSearch, setFormSearch] = useState<Search>({
     cccd: '',
     eventName: '',
     ownerName: '',
   });
   const showSidebar = () => setSidebar(!sidebar);
-  const pageRendering: PageRender = useSelector(
+  const pageRendering: PageRender | undefined = useSelector(
     (state: RootState) => state.pageRendering.currentPageRendering,
   );
   const dispatch = useDispatch();
@@ -92,8 +94,16 @@ const Sidebar: FC = () => {
       case PageRender.LIST_CREDENTIAL:
         {
           const res = await instance.get(
-            `congDan/search?cccd=${formSearch.ownerName}`,
+            `congDan/search?lastname=${formSearch.ownerName}&pageSize=4&page=1`,
           );
+          console.log(res.data);
+          if (res.data.status) {
+            dispatch(setCurrentListPeople(res.data.response));
+            dispatch(setTotal(res.data.totalItems));
+          } else {
+            dispatch(setCurrentErrorSearch([res.data.response]));
+            dispatch(setCurrentListPeople([]));
+          }
         }
         break;
       case PageRender.LIST_FAMILY:
@@ -101,14 +111,31 @@ const Sidebar: FC = () => {
           const res = await instance.get(
             `hoKhau/search?cccd=${formSearch.cccd}`,
           );
-          console.log(res.data);
-          dispatch(setCurrentListFamily(res.data.response));
+          if (res.data.status) {
+            dispatch(setCurrentListFamily(res.data.response));
+            dispatch(setTotal(res.data.totalItems));
+          } else {
+            dispatch(setCurrentErrorSearch([res.data.response]));
+            dispatch(setCurrentListFamily([]));
+          }
         }
         break;
 
       case PageRender.LIST_EVENT:
-        // const res = await instance.get('hoKhai');
-        return;
+        {
+          const res = await instance.get(
+            `dongGop/search?name=${formSearch.eventName}`,
+          );
+          console.log(res.data);
+          if (res.data.status) {
+            dispatch(setCurrentListEventFunding(res.data.response));
+            dispatch(setTotal(res.data.totalItems));
+          } else {
+            dispatch(setCurrentErrorSearch([res.data.response]));
+            dispatch(setCurrentListEventFunding([]));
+          }
+        }
+        break;
       default:
         return;
     }
@@ -120,76 +147,29 @@ const Sidebar: FC = () => {
         <NavIcon to="#" onClick={showSidebar}>
           <AiOutlineMenu />
         </NavIcon>
-        <Form className="">
-          <Row className="align-items-center d-flex justify-content-center ml-1">
-            <FormControl
-              type="search"
-              placeholder={generateSearchSuggestion(pageRendering)}
-              className="search-field me-2"
-              aria-label="Search"
-              onChange={handleChangeSearchFamily}
-            />
-            <Col xs="auto">
-              <Button onClick={handleClickSearchFamily} variant="primary">
-                Tìm
-              </Button>
-            </Col>
-
-            {pageRendering === PageRender.LIST_CREDENTIAL && (
+        {!!pageRendering && (
+          <Form className="">
+            <Row className="align-items-center d-flex justify-content-center ml-1">
+              <FormControl
+                type="search"
+                placeholder={generateSearchSuggestion(pageRendering)}
+                className="search-field me-2"
+                aria-label="Search"
+                onChange={handleChangeSearchFamily}
+              />
               <Col xs="auto">
-                <Button
-                  type="button"
-                  variant="success"
-                  onClick={(e) => {
-                    setDisplayAdvanceSearch(true);
-                    // handleChange(e, [5000000, 20000000]);
-                  }}
-                >
-                  Advanced Search
+                <Button onClick={handleClickSearchFamily} variant="primary">
+                  Tìm
                 </Button>
               </Col>
-            )}
-          </Row>
-        </Form>
+            </Row>
+          </Form>
+        )}
         <div className="auth-space-wrapper">
           <FaUserAlt />
           <div className="auth-space">Đăng nhập/Đăng ký</div>
         </div>
       </div>
-      {/* {displayAdvanceSearch && (
-        <Row className="align-items-center d-flex justify-content-center mr-5">
-          <Col sm={3}>
-            <Form.Control
-              as="select"
-              className="mr-sm-2"
-              name="category"
-              value={'Tạm trú'}
-              // onChange={onChangeForm}
-            >
-              {personStatus.map((status, index) => (
-                <option key={index}>{status}</option>
-              ))}
-            </Form.Control>
-          </Col>
-
-          <Col xs="auto">
-            <Button
-              type="button"
-              variant="danger"
-              onClick={(e) => {
-                setDisplayAdvanceSearch(false);
-                // handleChange(e, null);
-                // setForm({
-                //   ...form,
-                //   category: '',
-                // });
-              }}
-            >
-              X
-            </Button>
-          </Col>
-        </Row>
-      )} */}
 
       <SidebarNav sidebar={sidebar}>
         <div>
